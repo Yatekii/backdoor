@@ -26,4 +26,6 @@ def handle_dbsession(session_factory):
 
 @handle_dbsession(session_factory)
 def list_user(session, **kwargs):
-	return session.query(User).filter_by().all()
+	users = session.query(User).filter_by().all()
+	session.expunge_all()
+	return users

@@ -14,4 +14,4 @@ class User(Base):
 	welcome_sound = Column(String)
 
 	def __repr__(self):
-		return '<User(id=\'%d\', name=\'%s\', level=\'%d\', auth_token=\'%s\' secret=\'%s\' welcome_sound=\'%s\'' % (self.id, self.name, self.level, self.auth_token, self.secret, self.welcome_sound)
+		return '<User(id=\'%d\', name=\'%s\', level=\'%d\', auth_token=\'%s\' secret=\'%s\' welcome_sound=\'%s\'>' % (self.id, self.name, self.level, self.auth_token, self.secret, self.welcome_sound)
