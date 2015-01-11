@@ -1,20 +1,13 @@
 {% extends "layout.html" %}
 {% block body %}
-    <form action="{{ url_for('add_user') }}" method=get class=add-entry>
-        <dl>
-            <input type=text size=30 name=shared_secret value={{ secret }}>
-            <dt>Title:
-            <dd><input type=text size=30 name=title>
-            <dt>Text:
-            <dd><textarea name=text rows=5 cols=40></textarea>
-            <dd><input type=submit value=Share>
-        </dl>
-    </form>
-    <ul class=entries>
-        {% for entry in data %}
-            <li><h2>{{ entry.name }}</h2>{{ entry.text|safe }}
+    <h4>Add new user</h4>
+    {% include 'add_user.html' %}
+    <h4>Existing users</h4>
+    <table class=entries>
+        {% for user in users %}
+            <tr><td>{{ user.name }}</td><td>{{ user.level }}</td><td><a href="/remove_user?id={{ user.id }}">Remove</a></td></tr>
                 {% else %}
-            <li><em>Unbelievable. No entries here so far</em>
+            <tr>Unbelievable. No users here so far</tr>
         {% endfor %}
-    </ul>
+    </table>
 {% endblock %}

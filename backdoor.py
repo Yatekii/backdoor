@@ -36,22 +36,15 @@ def list_user(session, **kwargs):
 
 
 @handle_dbsession()
-def create_user(session, name, level, auth_token, secret, welcome_sound):
-    user = models.User(name=name, level=level, auth_token=auth_token, secret=secret, welcome_sound=welcome_sound)
+def create_user(session, *args, **kwargs):
+    user = models.User(*args, **kwargs)
     session.add(user)
     session.commit()
     session.close()
 
 
 @handle_dbsession()
-def remove_user_by_name(session, name):
-    session.delete(session.query(models.User).filter_by(name=name).first())
-    session.commit()
-    session.close()
-
-
-@handle_dbsession()
-def remove_user_by_token(session, *args, **kwargs):
+def remove_user_by_filter(session, *args, **kwargs):
     session.delete(session.query(models.User).filter_by(*args, **kwargs).first())
     session.commit()
     session.close()
