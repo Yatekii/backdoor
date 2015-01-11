@@ -24,17 +24,17 @@ def setup():
     userlevel = ''
     print(opts)
     for option, arg in opts:
-        if option in ('--create-db'):
+        if option in ('--create-db', ):
             do_create_db = True
-        if option in ('--create-user'):
+        if option in ('--create-user', ):
             do_create_user = True
             create_user_name = arg
-        if option in ('--sound-file'):
+        if option in ('--sound-file', ):
             sound_file = arg
-        if option in ('--remove-user'):
+        if option in ('--remove-user', ):
             do_remove_user = True
             remove_user_name = arg
-        if option in ('--userlevel'):
+        if option in ('--userlevel', ):
             userlevel = arg
 
     if do_create_db:
@@ -46,8 +46,7 @@ def setup():
             random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(config.token_length))
         secret = ''.join(
             random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(config.secret_length))
-        print('Create  user using name=%s auth_token=%s and secret=%s with sound_file=%s ...' % (
-        create_user_name, sound_file, auth_token, secret))
+        print('Create  user using name=%s auth_token=%s and secret=%s with sound_file=%s ...' % (create_user_name, sound_file, auth_token, secret))
         create_user(engine, create_user_name, 0, hashlib.sha512(auth_token.encode('utf-8')).hexdigest(), secret,
                     sound_file)
         print('Done.')
@@ -57,8 +56,8 @@ def setup():
             random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(config.token_length))
         secret = ''.join(
             random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(config.secret_length))
-        print('Removing admin using name=%s ...' % (remove_user_name))
-        remove_user(engine, remove_user_name)
+        print('Removing admin using name=%s ...' % remove_user_name)
+        remove_user_by_name(engine, remove_user_name)
         print('Done.')
 
 
@@ -85,4 +84,4 @@ def remove_user_by_name(engine, name):
 
 
 if __name__ == '__main__':
-    setup(requires=['sqlalchemy'])
+    setup()

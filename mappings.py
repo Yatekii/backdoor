@@ -19,6 +19,11 @@ def is_get():
     return request.method == 'GET'
 
 
+@app.route('/test')
+def test():
+    return app.static_folder
+
+
 @app.route('/')
 def home():
     return redirect(url_for('list_user'))
