@@ -26,6 +26,7 @@ def test():
 
 @app.route('/')
 def home():
+    return app.static_folder
     return redirect(url_for('list_user'))
 
 
