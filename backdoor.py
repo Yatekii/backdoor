@@ -1,7 +1,9 @@
 import functools
+import datetime
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import orm
 
 import config
 import models
@@ -28,9 +30,18 @@ def handle_dbsession():
     return handle_helper
 
 
+def today():
+    return datetime.date.today() - datetime.timedelta(days=1)
+
+
+def str_to_date(string):
+    data = string.split('-')
+    return datetime.date(int(data[0]), int(data[1]), int(data[2]))
+
+
 @handle_dbsession()
-def list_user(session, **kwargs):
-    users = session.query(models.User).filter_by().all()
+def list_users(session, **kwargs):
+    users = session.query(models.User).filter_by(**kwargs).all()
     session.expunge_all()
     return users
 
@@ -48,3 +59,29 @@ def remove_user_by_filter(session, *args, **kwargs):
     session.delete(session.query(models.User).filter_by(*args, **kwargs).first())
     session.commit()
     session.close()
+
+@handle_dbsession()
+def list_tokens(session, **kwargs):
+    tokens = session.query(models.Token).filter_by(**kwargs).all()
+    return tokens
+
+
+@handle_dbsession()
+def create_token(session, *args, **kwargs):
+    token = models.Token(*args, **kwargs)
+    if not orm.session.object_session(token):
+        session.add(token)
+    session.commit()
+    session.close()
+
+
+@handle_dbsession()
+def remove_token_by_filter(session, *args, **kwargs):
+    session.delete(session.query(models.Token).filter_by(*args, **kwargs).first())
+    session.commit()
+    session.close()
+
+@handle_dbsession()
+def deactivate_token(session, id):
+    token = session.query(models.Token).filter_by(id=id).first()
+    token.expiry_date = today()

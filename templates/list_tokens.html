@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% block body %}
+    <h4>Add new token</h4>
+    {% include 'add_token.html' %}
+    <h4>Existing tokens</h4>
+    <table class=entries>
+        {% for token in tokens %}
+	<tr><td>{{ token.value }}</td><td>{{ token.owner.name or 'FREE'}}</td><td>{{ token.creation_date }}</td><td>{{ token.expiry_date }}</td><td><a href="/remove_token?id={{ token.id }}">Remove</a></td></tr>
+                {% else %}
+            <tr>Unbelievable. No tokens here so far</tr>
+        {% endfor %}
+    </table>
+{% endblock %}

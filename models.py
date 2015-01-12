@@ -9,9 +9,10 @@ class Token(Base):
     __tablename__ = 'tokens'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    value = Column(String)
     creation_date = Column(Date)
     expiry_date = Column(Date)
-    owner = Column(Integer, ForeignKey('users.id'))
+    owner_id = Column(Integer, ForeignKey('users.id'))
 
 
 class User(Base):
@@ -22,7 +23,4 @@ class User(Base):
     name = Column(String)
     level = Column(Integer)
     welcome_sound = Column(String)
-    tokens = relationship('Token', backref='users')
-
-    def __repr__(self):
-        return '<User(id=\'%s\', name=\'%s\', level=\'%s\', auth_token=\'%s\' secret=\'%s\' welcome_sound=\'%s\'>' % (self.id, self.name, self.level, self.auth_token, self.secret, self.welcome_sound)
+    tokens = relationship('Token', lazy='dynamic', backref='owner')

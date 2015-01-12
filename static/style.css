@@ -1,71 +1,104 @@
+/*
+ * Base structure
+ */
+
+/* Move down content because we have a fixed navbar that is 50px tall */
 body {
-    font-family: sans-serif;
-    background: #eee;
+  padding-top: 50px;
 }
 
-a, h1, h2 {
-    color: #377ba8;
+
+/*
+ * Global add-ons
+ */
+
+.sub-header {
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
 }
 
-h1, h2 {
-    font-family: 'Georgia', serif;
-    margin: 0;
+/*
+ * Top navigation
+ * Hide default border to remove 1px line.
+ */
+.navbar-fixed-top {
+  border: 0;
 }
 
-h1 {
-    border-bottom: 2px solid #eee;
+/*
+ * Sidebar
+ */
+
+/* Hide for mobile, show later */
+.sidebar {
+  display: none;
+}
+@media (min-width: 768px) {
+  .sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;
+    display: block;
+    padding: 20px;
+    overflow-x: hidden;
+    overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+    background-color: #f5f5f5;
+    border-right: 1px solid #eee;
+  }
 }
 
-h2 {
-    font-size: 1.2em;
+/* Sidebar navigation */
+.nav-sidebar {
+  margin-right: -21px; /* 20px padding + 1px border */
+  margin-bottom: 20px;
+  margin-left: -20px;
+}
+.nav-sidebar > li > a {
+  padding-right: 20px;
+  padding-left: 20px;
+}
+.nav-sidebar > .active > a,
+.nav-sidebar > .active > a:hover,
+.nav-sidebar > .active > a:focus {
+  color: #fff;
+  background-color: #428bca;
 }
 
-.page {
-    margin: 2em auto;
-    width: 35em;
-    border: 5px solid #ccc;
-    padding: 0.8em;
-    background: white;
+
+/*
+ * Main content
+ */
+
+.main {
+  padding: 20px;
+}
+@media (min-width: 768px) {
+  .main {
+    padding-right: 40px;
+    padding-left: 40px;
+  }
+}
+.main .page-header {
+  margin-top: 0;
 }
 
-.entries {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
 
-.entries li {
-    margin: 0.8em 1.2em;
-}
+/*
+ * Placeholder dashboard ideas
+ */
 
-.entries li h2 {
-    margin-left: -1em;
+.placeholders {
+  margin-bottom: 30px;
+  text-align: center;
 }
-
-.add-entry {
-    font-size: 0.9em;
-    border-bottom: 1px solid #ccc;
+.placeholders h4 {
+  margin-bottom: 0;
 }
-
-.add-entry dl {
-    font-weight: bold;
+.placeholder {
+  margin-bottom: 20px;
 }
-
-.metanav {
-    text-align: right;
-    font-size: 0.8em;
-    padding: 0.3em;
-    margin-bottom: 1em;
-    background: #fafafa;
-}
-
-.flash {
-    background: #cee5F5;
-    padding: 0.5em;
-    border: 1px solid #aacbe2;
-}
-
-.error {
-    background: #f0d6d6;
-    padding: 0.5em;
+.placeholder img {
+  display: inline-block;
+  border-radius: 50%;
 }
