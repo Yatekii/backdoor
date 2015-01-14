@@ -1,9 +1,20 @@
 <form action="{{ url_for('add_user') }}" method=post class=add-entry>
-    <dl>
-        <dt>Name:
-        <dd><input type=text size=30 name=name>
-        <dt>Level:
-        <dd><input name=level >
-        <dd><input type=submit value=Create>
-    </dl>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <td>ID</td>
+            <td>Name</td>
+            <td>Level</td>
+            <td>Create?</td>
+        </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>ID</td>
+                <td><input type=text size=30 name=name></td>
+                <td><input name=level ></td>
+                <td><input type=submit value=Create></td>
+            </tr>
+        </tbody>
+    </table>
 </form>

@@ -1,11 +1,44 @@
 <form action="{{ url_for('add_token') }}" method=post class=add-entry>
-    <dl>
-        <dt>Value:
-        <dd><input type=text size=30 name=value>
-        <dt>Owner:
-        <dd><input name=owner >
-        <dt>Expiry date:
-        <dd><input name=expiry_date >
-        <dd><input type=submit value=Create>
-    </dl>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <td>ID</td>
+            <td>Owner</td>
+            <td>Creation Date</td>
+            <td>Expiry Date</td>
+            <td>Create?</td>
+        </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>ID</td>
+                <td><input name=owner id="owner"></td>
+                <td>{{ date }}</td>
+                <td><input name=expiry_date ></td>
+                <td><input type=submit value=Create></td>
+            </tr>
+        </tbody>
+    </table>
 </form>
+
+<script type="text/javascript">
+
+    var users = new Bloodhound({
+        datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
+        queryTokenizer: Bloodhound.tokenizers.whitespace,
+        remote: 'https://backdoor.wapple.ch{{ url_for('json', type='users') }}'
+    });
+
+    // Waiting for the DOM ready...
+    $(function(){
+      // applied typeahead to the text input box
+      $('#owner').typeahead({
+        name: 'users',
+        // data source
+        source: users.ttAdapter(),
+        displaykey: 'name',
+        // max item numbers list in the dropdown
+        limit: 10
+      });
+    });
+  </script>

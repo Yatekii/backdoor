@@ -1,5 +1,6 @@
 import functools
 import datetime
+import json
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -85,3 +86,13 @@ def remove_token_by_filter(session, *args, **kwargs):
 def deactivate_token(session, id):
     token = session.query(models.Token).filter_by(id=id).first()
     token.expiry_date = today()
+
+@handle_dbsession()
+def users_to_json_by_filter(session, **kwargs):
+    users = list_users(**kwargs)
+    session.add_all(users)
+    json_string = '{"users": ['
+    for user in users:
+        json_string += '{\n"name": "%s",\n "id": "%s"\n}, ' % (user.name, user.id)
+    print(json_string)
+    return json_string[:-2] + ']}'

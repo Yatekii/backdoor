@@ -15,9 +15,17 @@ import models
 app = Flask(__name__)
 app.static_folder = 'static'
 app.secret_key = 'adsjkfhasdjkfhjkasdhfkasdjhfkloajshdfjskdf'
+menu_activator = 'class=active'
+active = {
+    'overview': '',
+    'users': '',
+    'tokens': '',
+    'logs': ''
+}
 
 
 def contains_secret():
+    return True
     return request.cookies.get('bastli_backdoor_shared_secret') == config.shared_secret
 
 
@@ -27,7 +35,7 @@ def is_get():
 
 @app.route('/test')
 def test():
-    return app.static_folder
+    return backdoor.users_to_json_by_filter()
 
 
 @app.route('/set_cookie')
@@ -42,10 +50,25 @@ def home():
     return redirect(url_for('list_users'))
 
 
+@app.route('/json/<type>', methods=['GET'])
+def json(type):
+    if type == 'users':
+        return backdoor.users_to_json_by_filter()
+    abort(403)
+
+
+@app.route('/overview')
+def overview():
+    return redirect(url_for('list_users'))
+
+
 @app.route('/list_users', methods=['POST', 'GET'])
 def list_users():
     if contains_secret():
-        return render_template('list_users.html', users=backdoor.list_users())
+        for key in active.keys():
+            active[key] = ''
+        active['users'] = menu_activator
+        return render_template('list_users.html', active=active, users=backdoor.list_users())
     else:
         abort(403)
 
@@ -69,13 +92,18 @@ def remove_user():
     else:
         abort(403)
 
+
 @app.route('/list_tokens', methods=['POST', 'GET'])
 @backdoor.handle_dbsession()
 def list_tokens(session):
     if contains_secret():
         tokens = backdoor.list_tokens()
         session.add_all(tokens)
-        return render_template('list_tokens.html', tokens=tokens)
+        for key in active.keys():
+            active[key] = ''
+        active['tokens'] = menu_activator
+        print(active['tokens'])
+        return render_template('list_tokens.html', active=active, date=backdoor.today(), tokens=tokens)
     else:
         abort(403)
 
@@ -85,10 +113,12 @@ def list_tokens(session):
 def add_token(session):
     if contains_secret():
         owner = session.query(models.User).filter_by(id=request.form['owner']).first()
-        if not owner:
+        if not owner and owner is not 0:
             flash('User does not exist. Canceled creation of token')
             return redirect(url_for('list_tokens'))
-        backdoor.create_token(value=request.form['value'], owner=owner, expiry_date=backdoor.str_to_date(request.form['expiry_date']), creation_date=backdoor.today())
+        backdoor.create_token(value=request.form['value'], owner=owner,
+                              expiry_date=backdoor.str_to_date(request.form['expiry_date']),
+                              creation_date=backdoor.today())
         flash('New token was created successfully')
         return redirect(url_for('list_tokens'))
     else:
@@ -114,3 +144,7 @@ def deactivate_token():
     else:
         abort(403)
 
+
+@app.route('/logs')
+def logs():
+    return redirect(url_for('list_users'))
