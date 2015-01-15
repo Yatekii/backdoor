@@ -8,9 +8,10 @@
         <tr>
             <td>ID</td>
             <td>Name</td>
-            <td>Creation Date</td>
             <td>Level</td>
+            <td>Tokens</td>
             <td>Welcome Sound</td>
+            <td>Creation Date</td>
             <td>Remove?</td>
         </tr>
         </thead>
@@ -19,9 +20,14 @@
             <tr>
                 <td>{{ user.id }}</td>
                 <td>{{ user.name }}</td>
-                <td>{{ user.creation_date }}</td>
                 <td>{{ user.level }}</td>
+                <td>[{%  for token in user.tokens %}
+                    <a href="{{ url_for('list_tokens') + '#' + token.id|string }}">{{ token.id }}</a>{% if not loop.last %} | {% endif %}
+                {% else %}
+
+                {% endfor %}]</td>
                 <td>{{ user.welcome_sound }}</td>
+                <td>{{ user.creation_date }}</td>
                 <td>Remove</td>
             </tr>
         {% else %}

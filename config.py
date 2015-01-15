@@ -3,7 +3,7 @@ port = 8001
 server_debug = True
 
 db = 'sqlite:///db.sqlite'
-sql_debug = True
+sql_debug = False
 token_length = 16
 secret_length = 16
 

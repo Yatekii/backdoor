@@ -52,6 +52,7 @@ def home():
 
 @app.route('/json/<type>', methods=['GET'])
 def json(type):
+    print(type)
     if type == 'users':
         return backdoor.users_to_json_by_filter()
     abort(403)
@@ -63,12 +64,15 @@ def overview():
 
 
 @app.route('/list_users', methods=['POST', 'GET'])
-def list_users():
+@backdoor.handle_dbsession()
+def list_users(session):
     if contains_secret():
         for key in active.keys():
             active[key] = ''
         active['users'] = menu_activator
-        return render_template('list_users.html', active=active, users=backdoor.list_users())
+        users = backdoor.list_users()
+        session.add_all(users)
+        return render_template('list_users.html', active=active, users=users)
     else:
         abort(403)
 
@@ -96,14 +100,14 @@ def remove_user():
 @app.route('/list_tokens', methods=['POST', 'GET'])
 @backdoor.handle_dbsession()
 def list_tokens(session):
+    print(request.args)
     if contains_secret():
         tokens = backdoor.list_tokens()
         session.add_all(tokens)
         for key in active.keys():
             active[key] = ''
         active['tokens'] = menu_activator
-        print(active['tokens'])
-        return render_template('list_tokens.html', active=active, date=backdoor.today(), tokens=tokens)
+        return render_template('list_tokens.html', active=active, date=backdoor.today(), tokens=tokens, previous=dict(request.args.items(multi=False)))
     else:
         abort(403)
 
@@ -112,13 +116,58 @@ def list_tokens(session):
 @backdoor.handle_dbsession()
 def add_token(session):
     if contains_secret():
-        owner = session.query(models.User).filter_by(id=request.form['owner']).first()
-        if not owner and owner is not 0:
-            flash('User does not exist. Canceled creation of token')
-            return redirect(url_for('list_tokens'))
-        backdoor.create_token(value=request.form['value'], owner=owner,
-                              expiry_date=backdoor.str_to_date(request.form['expiry_date']),
-                              creation_date=backdoor.today())
+        print(request.form)
+        if request.form['token_owner_id'] == '':
+            flash('Invalid Username. Please check your entry for owner!')
+            return redirect(url_for(
+                'list_tokens',
+                token_owner_id=request.form['token_owner_id'],
+                token_owner=request.form['token_owner'],
+                token_creation_date=backdoor.today(),
+                token_expiry_date=request.form['token_expiry_date']
+            ))
+
+        owner = session.query(models.User).filter_by(id=request.form['token_owner_id']).first()
+
+        if not owner:
+            flash('User does not exist. Please check your entry for owner!')
+            return redirect(url_for(
+                'list_tokens',
+                token_owner_id=request.form['token_owner_id'],
+                token_owner=request.form['token_owner'],
+                token_creation_date=backdoor.today(),
+                token_expiry_date=request.form['token_expiry_date']
+            ))
+
+        if backdoor.today() != backdoor.str_to_date(request.form['token_creation_date']):
+            flash('Creation date was adjusted. Please give your OK!')
+            return redirect(url_for(
+                'list_tokens',
+                token_owner_id=request.form['token_owner_id'],
+                token_owner=request.form['token_owner'],
+                token_creation_date=backdoor.today(),
+                token_expiry_date=request.form['token_expiry_date']
+            ))
+
+        try:
+            expiry_date = backdoor.str_to_date(request.form['token_expiry_date'])
+        except BaseException:
+            flash('Expiry date has a bad format. Please check expiry date (Should be YYYY-mm-dd)!')
+            return redirect(url_for(
+                'list_tokens',
+                token_owner_id=request.form['token_owner_id'],
+                token_owner=request.form['token_owner'],
+                token_creation_date=backdoor.today(),
+                token_expiry_date=request.form['token_expiry_date']
+            ))
+
+        backdoor.create_token(
+            value=backdoor.generate_token(),
+            owner=owner,
+            expiry_date=expiry_date,
+            creation_date=backdoor.today()
+        )
+
         flash('New token was created successfully')
         return redirect(url_for('list_tokens'))
     else:

@@ -52,10 +52,6 @@ def setup():
         print('Done.')
 
     if do_remove_user:
-        auth_token = ''.join(
-            random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(config.token_length))
-        secret = ''.join(
-            random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(config.secret_length))
         print('Removing admin using name=%s ...' % remove_user_name)
         remove_user_by_name(engine, remove_user_name)
         print('Done.')

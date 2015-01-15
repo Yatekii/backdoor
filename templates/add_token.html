@@ -11,11 +11,11 @@
         </thead>
         <tbody>
             <tr>
-                <td>ID</td>
-                <td><input name=owner id="owner"></td>
-                <td>{{ date }}</td>
-                <td><input name=expiry_date ></td>
-                <td><input type=submit value=Create></td>
+                <td>ID<input name="token_owner_id" id="token_owner_id" title="" value="{{ previous['token_owner_id'] }}" /></td>
+                <td><input type="text" name="token_owner" id="token_owner" class="typeahead form-control" title="Token owner" value="{{ previous['token_owner'] }}" /></td>
+                <td>{{ date }}<input name="token_creation_date" id="token_creation_date" title="Token creation date" value="{{ date }}" /></td>
+                <td><input type="text" name="token_expiry_date" class="form-control" title="Token expiry date" value="{{ previous['token_expiry_date'] }}" /></td>
+                <td><input type="submit" class="btn btn-default" value="Create" /></td>
             </tr>
         </tbody>
     </table>
@@ -23,22 +23,38 @@
 
 <script type="text/javascript">
 
-    var users = new Bloodhound({
-        datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
-        queryTokenizer: Bloodhound.tokenizers.whitespace,
-        remote: 'https://backdoor.wapple.ch{{ url_for('json', type='users') }}'
+function findMatches(q, cb) {
+    $.ajax('https://backdoor.yatekii.ch{{ url_for('json', type='users') }}', {q: q}).done(function (json) {
+        var substrRegex = new RegExp(q, 'i');
+        var matches = [];
+        $.each($.parseJSON(json).users, function (i, entry) {
+            if (substrRegex.test(entry.name)) {
+                matches.push(entry);
+            }
+        });
+        cb(matches);
     });
+}
 
-    // Waiting for the DOM ready...
-    $(function(){
-      // applied typeahead to the text input box
-      $('#owner').typeahead({
-        name: 'users',
-        // data source
-        source: users.ttAdapter(),
-        displaykey: 'name',
-        // max item numbers list in the dropdown
-        limit: 10
-      });
-    });
+var token_owner_input = $('input#token_owner');
+token_owner_input.typeahead({
+            minLength: 1,
+            highlight: false,
+            hint: false
+        },
+        {
+            name: 'owners',
+            source: findMatches,
+            displayKey: 'name'
+        }
+);
+
+token_owner_input.bind('typeahead:selected', function(obj, datum, name) {
+    $('#token_owner_id').val(datum.id)
+});
+
+token_owner_input.bind('typeahead:opened', function(obj, datum, name) {
+    $('#token_owner_id').val('')
+});
+
   </script>

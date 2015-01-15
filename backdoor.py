@@ -1,6 +1,8 @@
 import functools
 import datetime
 import json
+import random
+import string
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -40,10 +42,13 @@ def str_to_date(string):
     return datetime.date(int(data[0]), int(data[1]), int(data[2]))
 
 
+def generate_token():
+    return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(config.secret_length))
+
+
 @handle_dbsession()
 def list_users(session, **kwargs):
     users = session.query(models.User).filter_by(**kwargs).all()
-    session.expunge_all()
     return users
 
 
@@ -94,5 +99,4 @@ def users_to_json_by_filter(session, **kwargs):
     json_string = '{"users": ['
     for user in users:
         json_string += '{\n"name": "%s",\n "id": "%s"\n}, ' % (user.name, user.id)
-    print(json_string)
     return json_string[:-2] + ']}'
