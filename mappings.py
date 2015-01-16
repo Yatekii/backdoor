@@ -120,21 +120,11 @@ def list_tokens(session, filter, value):
 @backdoor.handle_dbsession()
 def add_token(session):
     if contains_secret():
-        print(request.form)
-        if request.form['token_owner_id'] == '':
-            flash('Invalid Username. Please check your entry for owner!')
-            return redirect(url_for(
-                'list_tokens',
-                token_owner_id=request.form['token_owner_id'],
-                token_owner=request.form['token_owner'],
-                token_creation_date=backdoor.today(),
-                token_expiry_date=request.form['token_expiry_date']
-            ))
 
         owner = session.query(models.User).filter_by(id=request.form['token_owner_id']).first()
 
-        if not owner:
-            flash('User does not exist. Please check your entry for owner!')
+        if not owner and request.form['token_owner'] != 'FREE':
+            flash('User does not exist. Please check your entry for owner!', 'danger')
             return redirect(url_for(
                 'list_tokens',
                 token_owner_id=request.form['token_owner_id'],
@@ -144,7 +134,7 @@ def add_token(session):
             ))
 
         if backdoor.today() != backdoor.str_to_date(request.form['token_creation_date']):
-            flash('Creation date was adjusted. Please give your OK!')
+            flash('Creation date was adjusted. Please give your OK!', 'info')
             return redirect(url_for(
                 'list_tokens',
                 token_owner_id=request.form['token_owner_id'],
@@ -156,7 +146,7 @@ def add_token(session):
         try:
             expiry_date = backdoor.str_to_date(request.form['token_expiry_date'])
         except BaseException:
-            flash('Expiry date has a bad format. Please check expiry date (Should be YYYY-mm-dd)!')
+            flash('Expiry date has a bad format. Please check expiry date (Should be YYYY-mm-dd)!', 'danger')
             return redirect(url_for(
                 'list_tokens',
                 token_owner_id=request.form['token_owner_id'],
@@ -172,7 +162,7 @@ def add_token(session):
             creation_date=backdoor.today()
         )
 
-        flash('New token was created successfully')
+        flash('New token was created successfully', 'success')
         return redirect(url_for('list_tokens'))
     else:
         abort(403)
