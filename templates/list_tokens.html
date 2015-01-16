@@ -20,7 +20,7 @@
                 <td>{{ token.owner.name or 'FREE' }}</td>
                 <td>{{ token.creation_date }}</td>
                 <td>{{ token.expiry_date }}</td>
-                <td><a href="/remove_token?id={{ token.id }}">Remove</a></td>
+                <td><form class="remove_form" action="{{ url_for('remove_token') }}" method=post><input type="submit" class="btn btn-default btn-danger" value="Remove" /><input name="id" class="invisible" value="{{ token.id }}" /></form></td>
             </tr>
         {% else %}
             <tr>
@@ -29,4 +29,15 @@
         {% endfor %}
         </tbody>
     </table>
+    <script type="text/javascript">
+        $.each($(".remove_form"), function (i, entry){
+            $(entry).submit(function () {
+                button = $(entry).find("input[type='submit']");
+                if (button.val() == "Remove") {
+                    button.val("Confirm");
+                    return false;
+                }
+            });
+        });
+    </script>
 {% endblock %}

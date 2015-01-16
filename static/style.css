@@ -151,3 +151,7 @@ body {
 .tt-suggestion p {
   margin: 0;
 }
+
+.invisible {
+    visibility: hidden;
+}

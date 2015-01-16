@@ -28,7 +28,7 @@
                 {% endfor %}]</td>
                 <td>{{ user.welcome_sound }}</td>
                 <td>{{ user.creation_date }}</td>
-                <td>Remove</td>
+                <td><form><input type="submit" value="Remove" /><input name="id" value="{{ user.id }}" /></form></td>
             </tr>
         {% else %}
             <tr>

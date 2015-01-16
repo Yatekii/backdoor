@@ -174,10 +174,10 @@ def add_token(session):
         abort(403)
 
 
-@app.route('/remove_token', methods=['GET'])
+@app.route('/remove_token', methods=['POST'])
 def remove_token():
     if contains_secret():
-        backdoor.remove_token_by_filter(id=request.args['id'])
+        backdoor.remove_token_by_filter(id=request.form['id'])
         flash('Token was removed successfully')
         return redirect(url_for('list_tokens'))
     else:
