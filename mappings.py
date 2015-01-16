@@ -97,12 +97,16 @@ def remove_user():
         abort(403)
 
 
-@app.route('/list_tokens', methods=['POST', 'GET'])
+@app.route('/list_tokens/', defaults={'filter': 'default', 'value': 'all'})
+@app.route('/list_tokens/<filter>/<value>/', methods=['POST', 'GET'])
 @backdoor.handle_dbsession()
-def list_tokens(session):
-    print(request.args)
+def list_tokens(session, filter, value):
+    print(filter)
     if contains_secret():
-        tokens = backdoor.list_tokens()
+        if filter == 'default' or value == 'all':
+            tokens = backdoor.list_tokens()
+        else:
+            tokens = backdoor.list_tokens(**{filter: value})
         session.add_all(tokens)
         for key in active.keys():
             active[key] = ''

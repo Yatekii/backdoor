@@ -22,13 +22,13 @@
                 <td>{{ user.name }}</td>
                 <td>{{ user.level }}</td>
                 <td>[{%  for token in user.tokens %}
-                    <a href="{{ url_for('list_tokens') + '#' + token.id|string }}">{{ token.id }}</a>{% if not loop.last %} | {% endif %}
+                    <a href="{{ url_for('list_tokens', filter='id', value=token.id) }}">{{ token.id }}</a>{% if not loop.last %} | {% endif %}
                 {% else %}
 
                 {% endfor %}]</td>
                 <td>{{ user.welcome_sound }}</td>
                 <td>{{ user.creation_date }}</td>
-                <td><form><input type="submit" value="Remove" /><input name="id" value="{{ user.id }}" /></form></td>
+                <td><form><input type="submit" value="Remove" /><input name="id" value="{{ user.id }}" title="User id" /></form></td>
             </tr>
         {% else %}
             <tr>
