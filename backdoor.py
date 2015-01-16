@@ -34,7 +34,7 @@ def handle_dbsession():
 
 
 def today():
-    return datetime.date.today() - datetime.timedelta(days=1)
+    return datetime.date.today()
 
 
 def str_to_date(string):
@@ -88,9 +88,24 @@ def remove_token_by_filter(session, *args, **kwargs):
     session.close()
 
 @handle_dbsession()
-def deactivate_token(session, id):
+def revoke_token(session, id):
     token = session.query(models.Token).filter_by(id=id).first()
-    token.expiry_date = today()
+    if token:
+        token.expiry_date = today() - datetime.timedelta(days=1)
+        return True
+    return False
+
+
+@handle_dbsession()
+def activate_token(session, id):
+    token = session.query(models.Token).filter_by(id=id).first()
+    if token:
+        for date in config.semester_end:
+            if date <= today():
+                continue
+            token.expiry_date = date
+            return token.expiry_date
+    return False
 
 @handle_dbsession()
 def users_to_json_by_filter(session, **kwargs):

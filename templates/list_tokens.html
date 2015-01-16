@@ -3,7 +3,7 @@
     <h4>Add new token</h4>
     {% include 'add_token.html' %}
     <h4>Existing tokens</h4>
-    <table class="table table-striped">
+    <table class="table table-striped table_tokens">
         <thead>
         <tr>
             <td>ID</td>
@@ -11,6 +11,7 @@
             <td>Creation Date</td>
             <td>Expiry Date</td>
             <td>Remove?</td>
+            <td>Revoke?</td>
         </tr>
         </thead>
         <tbody>
@@ -18,12 +19,27 @@
             <tr>
                 <td>{{ token.id }}</td>
                 <td>{{ token.owner.name or 'FREE' }}</td>
-                <td>{{ token.creation_date }}</td>
+                <td>{% if token.expiry_date <= date %}<span class="alert alert-danger expired" role="alert"><strong>EXPIRED</strong></span>{% else %}{{ token.creation_date }}{% endif %}</td>
                 <td>{{ token.expiry_date }}</td>
-                <td><form class="remove_form" action="{{ url_for('remove_token') }}" method=post>
-                    <input type="submit" class="btn btn-default btn-danger" value="Remove" />
-                    <input name="id" class="invisible" value="{{ token.id }}" title="Token id"/>
-                </form></td>
+                <td>
+                    <form class="remove_form" action="{{ url_for('remove_token') }}" method=post>
+                        <input type="submit" class="btn btn-default btn-danger" value="Remove" />
+                        <input name="token_id" class="invisible" value="{{ token.id }}" title="Token id"/>
+                    </form>
+                </td>
+                <td>
+                    {% if token.expiry_date > date %}
+                        <form class="revoke_form" action="{{ url_for('revoke_token') }}" method=post>
+                            <input type="submit" class="btn btn-default btn-warning" value="Revoke" />
+                            <input name="token_id" class="invisible" value="{{ token.id }}" title="Token id"/>
+                        </form>
+                    {% else %}
+                        <form class="activation_form" action="{{ url_for('activate_token') }}" method=post>
+                            <input type="submit" class="btn btn-default btn-success" value="Activate" />
+                            <input name="token_id" class="invisible" value="{{ token.id }}" title="Token id"/>
+                        </form>
+                    {% endif %}
+                </td>
             </tr>
         {% else %}
             <tr>

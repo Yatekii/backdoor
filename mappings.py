@@ -1,5 +1,7 @@
-from flask import Flask, flash
+import functools
 
+
+from flask import Flask, flash
 from flask import request
 from flask import render_template
 from flask import url_for
@@ -23,6 +25,17 @@ active = {
     'logs': ''
 }
 
+
+def check_secret():
+    def checker_helper(f):
+        @functools.wraps(f)
+        def inner(*args, **kwargs):
+                if contains_secret():
+                    return f(*args, **kwargs)
+                else:
+                    abort(403)
+        return inner
+    return checker_helper
 
 def contains_secret():
     return True
@@ -101,7 +114,6 @@ def remove_user():
 @app.route('/list_tokens/<filter>/<value>/', methods=['POST', 'GET'])
 @backdoor.handle_dbsession()
 def list_tokens(session, filter, value):
-    print(filter)
     if contains_secret():
         if filter == 'default' or value == 'all':
             tokens = backdoor.list_tokens()
@@ -171,22 +183,34 @@ def add_token(session):
 @app.route('/remove_token', methods=['POST'])
 def remove_token():
     if contains_secret():
-        backdoor.remove_token_by_filter(id=request.form['id'])
+        backdoor.remove_token_by_filter(id=request.form['token_id'])
         flash('Token was removed successfully')
         return redirect(url_for('list_tokens'))
     else:
         abort(403)
 
 
-@app.route('/deactivate_token', methods=['GET'])
-def deactivate_token():
+@app.route('/revoke_token', methods=['POST'])
+def revoke_token():
     if contains_secret():
-        backdoor.deactivate_token(request.args['id'])
-        flash('Token was deactivated successfully')
+        if backdoor.revoke_token(request.form['token_id']):
+            flash('Token was has successfully been revoked', 'success')
+        else:
+            flash('Revoking of Token failed. Are you sure that Token exists?', 'danger')
         return redirect(url_for('list_tokens'))
     else:
         abort(403)
 
+
+@app.route('/activate_token', methods=['POST'])
+@check_secret()
+def activate_token():
+    expiry_date = backdoor.activate_token(request.form['token_id'])
+    if expiry_date:
+        flash('Token expiry date was has successfully been extended to %s' % expiry_date, 'success')
+    else:
+        flash('Token expiry date hasn\'t been modified. Could be due to broken config. Please contact an administrator.', 'danger')
+    return redirect(url_for('list_tokens'))
 
 @app.route('/logs')
 def logs():
