@@ -19,8 +19,8 @@
             <tr>
                 <td>{{ token.id }}</td>
                 <td>{{ token.owner.name or 'FREE' }}</td>
-                <td>{% if token.expiry_date <= date %}<span class="alert alert-danger expired" role="alert"><strong>EXPIRED</strong></span>{% else %}{{ token.creation_date }}{% endif %}</td>
-                <td>{{ token.expiry_date }}</td>
+                <td>{{ token.creation_date }}</td>
+                <td>{% if token.expiry_date <= date %}<span class="alert alert-danger expired" role="alert"><strong>EXPIRED</strong></span>{% else %}{{ token.expiry_date }}{% endif %}</td>
                 <td>
                     <form class="remove_form" action="{{ url_for('remove_token') }}" method=post>
                         <input type="submit" class="btn btn-default btn-danger" value="Remove" />
