@@ -18,9 +18,23 @@
         {% for token in tokens %}
             <tr>
                 <td>{{ token.id }}</td>
-                <td>{{ token.owner.name or 'FREE' }}</td>
+                <td>
+                        <form class="change_owner_name col-lg-6" action="{{ url_for('change_token_name') }}" method=post>
+                            <input type="submit" class="form-control" value="{{ token.owner.name or 'FREE' }}" />
+                            <span class="invisible change_token_id">{{ token.id }}</span>
+                        </form>
+                </td>
                 <td>{{ token.creation_date }}</td>
-                <td>{% if token.expiry_date <= date %}<span class="alert alert-danger expired" role="alert"><strong>EXPIRED</strong></span>{% else %}{{ token.expiry_date }}{% endif %}</td>
+                <td>
+                    <div class="col-lg-4">
+                        <div class="input-group">
+                          <input type="text" class="form-control" value="{{ token.expiry_date }}" title="Owner">
+                          <span class="input-group-btn">
+                            <button class="btn btn-default" type="button"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></button>
+                          </span>
+                        </div><!-- /input-group -->
+                      </div>
+                </td>
                 <td>
                     <form class="remove_form" action="{{ url_for('remove_token') }}" method=post>
                         <input type="submit" class="btn btn-default btn-danger" value="Remove" />
@@ -48,15 +62,40 @@
         {% endfor %}
         </tbody>
     </table>
+
     <script type="text/javascript">
         $.each($(".remove_form"), function (i, entry){
             $(entry).submit(function () {
-                button = $(entry).find("input[type='submit']");
+                var button = $(entry).find("input[type='submit']");
                 if (button.val() == "Remove") {
                     button.val("Confirm");
                     return false;
                 }
             });
         });
+
+        $.each($(".change_owner_name"), function (i, entry){
+            var ent = $(entry).find("input[type='submit']")[0];
+            $(ent).click(function () {
+                var owner_input_replace =
+                    '<span class="user_typeahead">' +
+                        '<div class="input-group">' +
+                            '<input type="text" name="change_token_owner_name" class="typeahead form-control user_typeahead_name" title="Token owner" value="' + $(ent).val() + '" />' +
+                            '<span class="input-group-btn">' +
+                                '<button class="btn btn-default button_change_owner" style="margin-top:-5px" type="submit">' +
+                                    '<span class="glyphicon glyphicon-ok" aria-hidden="true">' +
+                                    '</span>' +
+                                '</button>' +
+                            '</span>' +
+                        '</div>' +
+                        '<input type="text" name="change_token_owner_id" class="invisible user_typeahead_id" title="" />' +
+                        '<input type="text" name="change_token_id" class="invisible" title="" value="' + $(ent).siblings().filter('.change_token_id').html() + '" />' +
+                    '</span>';
+                $(entry).html(owner_input_replace);
+                user_typeahead();
+            });
+        });
+
+        user_typeahead();
     </script>
 {% endblock %}

@@ -124,38 +124,38 @@ def list_tokens(session, filter, value):
 @backdoor.handle_dbsession()
 def add_token(session):
 
-    owner = session.query(models.User).filter_by(id=request.form['token_owner_id']).first()
+    owner = session.query(models.User).filter_by(id=request.form['add_token_owner_id']).first()
 
-    if not owner and request.form['token_owner'] != 'FREE':
+    if not owner and request.form['add_token_owner'] != 'FREE':
         flash('User does not exist. Please check your entry for owner!', 'danger')
         return redirect(url_for(
             'list_tokens',
-            token_owner_id=request.form['token_owner_id'],
-            token_owner=request.form['token_owner'],
+            token_owner_id=request.form['add_token_owner_id'],
+            token_owner=request.form['add_token_owner'],
             token_creation_date=backdoor.today(),
-            token_expiry_date=request.form['token_expiry_date']
+            token_expiry_date=request.form['add_token_expiry_date']
         ))
 
-    if backdoor.today() != backdoor.str_to_date(request.form['token_creation_date']):
+    if backdoor.today() != backdoor.str_to_date(request.form['add_token_creation_date']):
         flash('Creation date was adjusted. Please give your OK!', 'info')
         return redirect(url_for(
             'list_tokens',
-            token_owner_id=request.form['token_owner_id'],
-            token_owner=request.form['token_owner'],
+            token_owner_id=request.form['add_token_owner_id'],
+            token_owner=request.form['add_token_owner'],
             token_creation_date=backdoor.today(),
-            token_expiry_date=request.form['token_expiry_date']
+            token_expiry_date=request.form['add_token_expiry_date']
         ))
 
     try:
-        expiry_date = backdoor.str_to_date(request.form['token_expiry_date'])
+        expiry_date = backdoor.str_to_date(request.form['add_token_expiry_date'])
     except BaseException:
         flash('Expiry date has a bad format. Please check expiry date (Should be YYYY-mm-dd)!', 'danger')
         return redirect(url_for(
             'list_tokens',
-            token_owner_id=request.form['token_owner_id'],
-            token_owner=request.form['token_owner'],
+            token_owner_id=request.form['add_token_owner_id'],
+            token_owner=request.form['add_token_owner'],
             token_creation_date=backdoor.today(),
-            token_expiry_date=request.form['token_expiry_date']
+            token_expiry_date=request.form['add_token_expiry_date']
         ))
 
     backdoor.create_token(
@@ -196,6 +196,36 @@ def activate_token():
     else:
         flash('Token expiry date hasn\'t been modified. Could be due to broken config. Please contact an administrator.', 'danger')
     return redirect(url_for('list_tokens'))
+
+
+@app.route('/change_token', methods=['POST'])
+@check_secret()
+@backdoor.handle_dbsession()
+def change_token_name(session):
+    error = False
+    token = session.query(models.Token).filter_by(id=request.form.get('change_token_id')).first()
+    if not token:
+        error = True
+        flash('Token does not exist. Check that you use valid parameters', 'danger')
+
+    new_owner = session.query(models.User).filter_by(id=request.form.get('change_token_owner_id')).first()
+    if not new_owner:
+        error = True
+        new_owner_query = session.query(models.User).filter_by(name=request.form.get('change_token_owner_name'))
+        if new_owner_query.count() == 1:
+            error = False
+            new_owner = new_owner_query.first()
+
+    if not new_owner and request.form.get('change_token_owner_name') != 'FREE':
+        flash('User does not exist: %s' % new_owner, 'danger')
+
+    if not error:
+        token.owner = new_owner
+        session.add(token)
+        session.commit()
+        flash('Token #%s has new owner %s.' % (token.id, token.owner.name), 'success')
+    return redirect(url_for('list_tokens'))
+
 
 @app.route('/logs')
 def logs():

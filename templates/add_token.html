@@ -1,4 +1,4 @@
-<form action="{{ url_for('add_token') }}" method=post class=add-entry>
+<form action="{{ url_for('add_token') }}" method=post>
     <table class="table table-striped">
         <thead>
         <tr>
@@ -11,50 +11,17 @@
         </thead>
         <tbody>
             <tr>
-                <td>ID<input name="token_owner_id" id="token_owner_id" title="" value="{{ previous['token_owner_id'] }}" /></td>
-                <td><input type="text" name="token_owner" id="token_owner" class="typeahead form-control" title="Token owner" value="{{ previous['token_owner'] }}" /></td>
-                <td>{{ date }}<input name="token_creation_date" id="token_creation_date" title="Token creation date" value="{{ date }}" /></td>
-                <td><input type="text" name="token_expiry_date" class="form-control" title="Token expiry date" value="{{ previous['token_expiry_date'] }}" /></td>
+                <td>ID</td>
+                <td>
+                    <span class="user_typeahead">
+                        <input type="text" name="add_token_owner" class="typeahead form-control user_typeahead_name" title="Token owner" value="{{ previous['token_owner'] }}" />
+                        <input type="text" name="add_token_owner_id" class="invisible user_typeahead_id" title="" value="{{ previous['token_owner_id'] }}" />
+                    </span>
+                </td>
+                <td>{{ date }}<input name="add_token_creation_date" id="add_token_creation_date" class="invisible" title="Token creation date" value="{{ date }}" /></td>
+                <td><input type="text" name="add_token_expiry_date" class="form-control" title="Token expiry date" value="{{ previous['token_expiry_date'] }}" /></td>
                 <td><input type="submit" class="btn btn-default" value="Create" /></td>
             </tr>
         </tbody>
     </table>
 </form>
-
-<script type="text/javascript">
-
-function findMatches(q, cb) {
-    $.ajax('https://backdoor.yatekii.ch{{ url_for('json', type='users') }}', {q: q}).done(function (json) {
-        var substrRegex = new RegExp(q, 'i');
-        var matches = [];
-        $.each($.parseJSON(json).users, function (i, entry) {
-            if (substrRegex.test(entry.name)) {
-                matches.push(entry);
-            }
-        });
-        cb(matches);
-    });
-}
-
-var token_owner_input = $('input#token_owner');
-token_owner_input.typeahead({
-            minLength: 1,
-            highlight: false,
-            hint: false
-        },
-        {
-            name: 'owners',
-            source: findMatches,
-            displayKey: 'name'
-        }
-);
-
-token_owner_input.bind('typeahead:selected', function(obj, datum, name) {
-    $('#token_owner_id').val(datum.id)
-});
-
-token_owner_input.bind('typeahead:opened', function(obj, datum, name) {
-    $('#token_owner_id').val('')
-});
-
-  </script>

@@ -107,6 +107,7 @@ def activate_token(session, id):
             return token.expiry_date
     return False
 
+
 @handle_dbsession()
 def users_to_json_by_filter(session, **kwargs):
     users = list_users(**kwargs)
