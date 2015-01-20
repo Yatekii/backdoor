@@ -9,6 +9,8 @@
             <td>ID</td>
             <td>Name</td>
             <td>Level</td>
+            <td>Email</td>
+            <td>nethzid</td>
             <td>Tokens</td>
             <td>Welcome Sound</td>
             <td>Creation Date</td>
@@ -21,6 +23,8 @@
                 <td>{{ user.id }}</td>
                 <td>{{ user.name }}</td>
                 <td>{{ user.level }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.nethzid }}</td>
                 <td>[{%  for token in user.tokens %}
                     <a href="{{ url_for('list_tokens', filter='id', value=token.id) }}">{{ token.id }}</a>{% if not loop.last %} | {% endif %}
                 {% else %}

@@ -1,14 +1,21 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Date, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy import Table
 
 Base = declarative_base()
+
+association_table = Table('association', Base.metadata,
+    Column('token_id', Integer, ForeignKey('tokens.id')),
+    Column('device_id', Integer, ForeignKey('devices.id'))
+)
 
 
 class Token(Base):
     __tablename__ = 'tokens'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String)
     value = Column(String)
     creation_date = Column(Date)
     expiry_date = Column(Date)
@@ -22,5 +29,14 @@ class User(Base):
     creation_date = Column(Date)
     name = Column(String)
     level = Column(Integer)
+    email = Column(String)
+    nethzid = Column(String)
     welcome_sound = Column(String)
     tokens = relationship('Token', lazy='dynamic', backref='owner')
+
+class Device(Base):
+    __tablename__ = 'devices'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String)
+    tokens = relationship('Token', secondary=association_table, backref='devices')
