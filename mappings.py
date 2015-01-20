@@ -126,30 +126,32 @@ def add_token(session):
 
     owner = session.query(models.User).filter_by(id=request.form['add_token_owner_id']).first()
 
-    if not owner and request.form['add_token_owner'] != 'FREE':
-        flash('User does not exist. Please check your entry for owner!', 'danger')
-        return redirect(url_for(
-            'list_tokens',
-            token_owner_id=request.form['add_token_owner_id'],
-            token_owner=request.form['add_token_owner'],
-            token_creation_date=backdoor.today(),
-            token_expiry_date=request.form['add_token_expiry_date']
-        ))
+    error = False
 
-    if backdoor.today() != backdoor.str_to_date(request.form['add_token_creation_date']):
-        flash('Creation date was adjusted. Please give your OK!', 'info')
-        return redirect(url_for(
-            'list_tokens',
-            token_owner_id=request.form['add_token_owner_id'],
-            token_owner=request.form['add_token_owner'],
-            token_creation_date=backdoor.today(),
-            token_expiry_date=request.form['add_token_expiry_date']
-        ))
+    if not owner and request.form['add_token_owner'] != 'FREE':
+        error = True
+        flash('User does not exist. Please check your entry for owner!', 'danger')
 
     try:
         expiry_date = backdoor.str_to_date(request.form['add_token_expiry_date'])
     except BaseException:
+        error = True
         flash('Expiry date has a bad format. Please check expiry date (Should be YYYY-mm-dd)!', 'danger')
+
+    if backdoor.today() != backdoor.str_to_date(request.form['add_token_creation_date']):
+            error = True
+            flash('Creation date was adjusted. Please give your OK!', 'info')
+
+    if not error:
+        backdoor.create_token(
+            value=backdoor.generate_token(),
+            owner=owner,
+            expiry_date=expiry_date,
+            creation_date=backdoor.today()
+        )
+        flash('New token was created successfully', 'success')
+        return redirect(url_for('list_tokens'))
+    else:
         return redirect(url_for(
             'list_tokens',
             token_owner_id=request.form['add_token_owner_id'],
@@ -157,16 +159,6 @@ def add_token(session):
             token_creation_date=backdoor.today(),
             token_expiry_date=request.form['add_token_expiry_date']
         ))
-
-    backdoor.create_token(
-        value=backdoor.generate_token(),
-        owner=owner,
-        expiry_date=expiry_date,
-        creation_date=backdoor.today()
-    )
-
-    flash('New token was created successfully', 'success')
-    return redirect(url_for('list_tokens'))
 
 
 @app.route('/remove_token', methods=['POST'])
@@ -198,10 +190,10 @@ def activate_token():
     return redirect(url_for('list_tokens'))
 
 
-@app.route('/change_token', methods=['POST'])
+@app.route('/change_token_owner', methods=['POST'])
 @check_secret()
 @backdoor.handle_dbsession()
-def change_token_name(session):
+def change_token_owner(session):
     error = False
     token = session.query(models.Token).filter_by(id=request.form.get('change_token_id')).first()
     if not token:
@@ -224,6 +216,29 @@ def change_token_name(session):
         session.add(token)
         session.commit()
         flash('Token #%s has new owner %s.' % (token.id, token.owner.name), 'success')
+    return redirect(url_for('list_tokens'))
+
+@app.route('/change_token_expiry_date', methods=['POST'])
+@check_secret()
+@backdoor.handle_dbsession()
+def change_token_expiry_date(session):
+    error = False
+    token = session.query(models.Token).filter_by(id=request.form.get('change_token_id')).first()
+    if not token:
+        error = True
+        flash('Token does not exist. Check that you use valid parameters', 'danger')
+
+    try:
+        new_expiry_date = backdoor.str_to_date(request.form['change_token_expiry_date'])
+    except BaseException:
+        error = True
+        flash('Expiry date has a bad format. Please check expiry date (Should be YYYY-mm-dd)!', 'danger')
+
+    if not error:
+        token.expiry_date = new_expiry_date
+        session.add(token)
+        session.commit()
+        flash('Token #%s has expires %s.' % (token.id, token.expiry_date), 'success')
     return redirect(url_for('list_tokens'))
 
 
