@@ -14,11 +14,11 @@
                 <td>ID</td>
                 <td>
                     <span class="user_typeahead">
-                        <input type="text" name="add_token_owner" class="typeahead form-control user_typeahead_name" title="Token owner" value="{{ previous['token_owner'] }}" />
+                        <input type="text" name="add_token_owner" class="typeahead form-control user_typeahead_name" title="Token owner" value="{{ previous['token_owner_name'] }}" />
                         <input type="text" name="add_token_owner_id" class="invisible user_typeahead_id" title="" value="{{ previous['token_owner_id'] }}" />
                     </span>
                 </td>
-                <td>{{ date }}<input name="add_token_creation_date" id="add_token_creation_date" class="invisible" title="Token creation date" value="{{ date }}" /></td>
+                <td>{{ date }}</td>
                 <td><input type="text" name="add_token_expiry_date" class="form-control" title="Token expiry date" value="{{ previous['token_expiry_date'] }}" /></td>
                 <td><input type="submit" class="btn btn-default" value="Create" /></td>
             </tr>

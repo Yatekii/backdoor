@@ -8,15 +8,27 @@
             <td>Email</td>
             <td>nethzid</td>
             <td>Welcome Sound</td>
+            <td>Creation Date</td>
             <td>Create?</td>
         </tr>
         </thead>
         <tbody>
             <tr>
                 <td>ID</td>
-                <td><input type=text size=30 name=name></td>
-                <td><input name=level ></td>
-                <td><input type=submit value=Create></td>
+                <td><input type="text" name="add_user_name" class="form-control" value="{{ previous['user_name'] }}" ></td>
+                <td><input type="text" name="add_user_level" class="form-control" value="{{ previous['user_level'] }}" ></td>
+                <td><input type="text" name="add_user_email" class="form-control" value="{{ previous['user_email'] }}" ></td>
+                <td><input type="text" name="add_user_nethzid" class="form-control" value="{{ previous['user_nethzid'] }}" ></td>
+                <td>
+                    <select name="add_user_welcome_sound" class="form-control">
+                            <option value="">--- NO Sound ---</option>
+                        {% for sound in sounds %}
+                            <option value="sound['path']" {% if previous['user_welcome_sound'] == sound.path %}selected="selected" {% endif %}>sound['name']</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>{{ date }}</td>
+                <td><input type="submit" value="Create" class="form-control" ></td>
             </tr>
         </tbody>
     </table>

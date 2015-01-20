@@ -60,8 +60,10 @@ function change_token_init(){
             $(this).parent().siblings().children().prop("readonly", false);
         }
     });*/
+}
 
-    $('form').on('click', ".button_change_expiry_date", function(event){
+function init_edit_field(name){
+    $('form').on('click', name, function(event){
         var icon = $(this).find('.glyphicon-pencil');
         if(icon.hasClass('glyphicon-pencil')) {
             event.preventDefault();

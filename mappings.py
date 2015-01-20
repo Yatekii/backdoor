@@ -1,4 +1,5 @@
 import functools
+import re
 
 
 from flask import Flask, flash
@@ -75,6 +76,9 @@ def overview():
     return redirect(url_for('list_users'))
 
 
+################################### USERS ##############################################
+
+
 @app.route('/list_users/', defaults={'filter': 'default', 'value': 'all'})
 @app.route('/list_users/<filter>/<value>/', methods=['POST', 'GET'])
 @check_secret()
@@ -87,23 +91,105 @@ def list_users(session, filter, value):
     for key in active.keys():
         active[key] = ''
     active['users'] = menu_activator
-    return render_template('list_users.html', active=active, users=users)
+    return render_template('list_users.html', active=active, date=backdoor.today(), users=users, previous=dict(request.args.items(multi=False)))
 
 
 @app.route('/add_user', methods=['POST'])
 @check_secret()
 def add_user():
-    backdoor.create_user(name=request.form['name'], level=request.form['level'])
-    flash('New user was created successfully')
-    return redirect(url_for('list_users'))
+    error = False
+
+    if not re.match(r'[\w.-]+@[\w.-]+.\w+', request.form['add_user_email']):
+        error = True
+        flash('Please enter a valid email address', 'danger')
+
+    if int(request.form['add_user_level']) not in range(0, 999):
+        error = True
+        flash('Please enter a valid number between 0 and 999 as the userlevel.', 'danger')
+
+    if not error:
+        backdoor.create_user(creation_date=backdoor.today(), name=request.form['add_user_name'], level=int(request.form['add_user_level']), email=request.form['add_user_email'], nethzid=request.form['add_user_nethzid'])
+        flash('New user was created successfully', 'success')
+        return redirect(url_for('list_users'))
+    else:
+        return redirect(url_for(
+            'list_users',
+            user_name=request.form['add_user_name'],
+            user_level=request.form['add_user_level'],
+            user_email=request.form['add_user_email'],
+            user_nethzid=request.form['add_user_nethzid']
+        ))
 
 
-@app.route('/remove_user', methods=['GET'])
+
+@app.route('/remove_user', methods=['POST'])
 @check_secret()
 def remove_user():
-    backdoor.remove_user_by_filter(id=request.args['id'])
-    flash('User was removed successfully')
+    backdoor.remove_user_by_filter(id=request.form['user_id'])
+    flash('User was removed successfully', 'success')
     return redirect(url_for('list_users'))
+
+@app.route('/change_user_level', methods=['POST'])
+@check_secret()
+@backdoor.handle_dbsession()
+def change_user_level(session):
+    error = False
+    user = session.query(models.User).filter_by(id=request.form.get('change_user_id')).first()
+    if not user:
+        error = True
+        flash('User does not exist. Check that you use valid parameters', 'danger')
+
+    if int(request.form['change_user_level']) not in range(0, 999):
+        error = True
+        flash('Please enter a valid number between 0 and 999 as the userlevel.', 'danger')
+
+    if not error:
+        user.level = int(request.form['change_user_level'])
+        session.add(user)
+        session.commit()
+        flash('User %s has now level %d.' % (user.name, user.level), 'success')
+    return redirect(url_for('list_users'))
+
+@app.route('/change_user_email', methods=['POST'])
+@check_secret()
+@backdoor.handle_dbsession()
+def change_user_email(session):
+    error = False
+    user = session.query(models.User).filter_by(id=request.form.get('change_user_id')).first()
+    if not user:
+        error = True
+        flash('User does not exist. Check that you use valid parameters', 'danger')
+
+    if not re.match(r'[\w.-]+@[\w.-]+.\w+', request.form['change_user_email']):
+        error = True
+        flash('Please enter a valid email address.', 'danger')
+
+    if not error:
+        user.email = request.form['change_user_email']
+        session.add(user)
+        session.commit()
+        flash('User %s has now email %s.' % (user.name, user.email), 'success')
+    return redirect(url_for('list_users'))
+
+@app.route('/change_user_nethzid', methods=['POST'])
+@check_secret()
+@backdoor.handle_dbsession()
+def change_user_nethzid(session):
+    error = False
+    user = session.query(models.User).filter_by(id=request.form.get('change_user_id')).first()
+    if not user:
+        error = True
+        flash('User does not exist. Check that you use valid parameters', 'danger')
+
+    if not error:
+        user.nethzid = request.form['change_user_nethzid']
+        session.add(user)
+        session.commit()
+        flash('User %s has now nethzid %s.' % (user.name, user.nethzid), 'success')
+    return redirect(url_for('list_users'))
+
+
+######################################## TOKENS #############################################
 
 
 @app.route('/list_tokens/', defaults={'filter': 'default', 'value': 'all'})
@@ -141,10 +227,6 @@ def add_token(session):
         error = True
         flash('Expiry date has a bad format. Please check expiry date (Should be YYYY-mm-dd)!', 'danger')
 
-    if backdoor.today() != backdoor.str_to_date(request.form['add_token_creation_date']):
-            error = True
-            flash('Creation date was adjusted. Please give your OK!', 'info')
-
     if not error:
         backdoor.create_token(
             value=backdoor.generate_token(),
@@ -159,7 +241,6 @@ def add_token(session):
             'list_tokens',
             token_owner_id=request.form['add_token_owner_id'],
             token_owner=request.form['add_token_owner'],
-            token_creation_date=backdoor.today(),
             token_expiry_date=request.form['add_token_expiry_date']
         ))
 
