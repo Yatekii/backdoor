@@ -1,0 +1,2 @@
+token bruucht name
+user bruucht email, eth chürzel

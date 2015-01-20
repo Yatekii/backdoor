@@ -75,15 +75,18 @@ def overview():
     return redirect(url_for('list_users'))
 
 
-@app.route('/list_users', methods=['POST', 'GET'])
+@app.route('/list_users/', defaults={'filter': 'default', 'value': 'all'})
+@app.route('/list_users/<filter>/<value>/', methods=['POST', 'GET'])
 @check_secret()
 @backdoor.handle_dbsession()
-def list_users(session):
+def list_users(session, filter, value):
+    if filter == 'default' or value == 'all':
+        users = session.query(models.User).all()
+    else:
+        users = session.query(models.User).filter_by(**{filter: value}).all()
     for key in active.keys():
         active[key] = ''
     active['users'] = menu_activator
-    users = backdoor.list_users()
-    session.add_all(users)
     return render_template('list_users.html', active=active, users=users)
 
 

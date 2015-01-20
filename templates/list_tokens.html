@@ -18,23 +18,7 @@
         {% for token in tokens %}
             <tr>
                 <td>{{ token.id }}</td>
-                <td>
-                        <form class="change_owner_name col-lg-6" action="{{ url_for('change_token_owner') }}" method=post>
-                            <span class="user_typeahead">
-                                <div class="input-group">
-                                    <input type="text" name="change_token_owner_name" class="typeahead form-control user_typeahead_name" title="Token owner" value="{{ token.owner.name }}" readonly />
-                                    <span class="input-group-btn">
-                                        <button class="btn btn-default button_change_owner" style="margin-top:-5px" type="submit">
-                                            <span class="glyphicon glyphicon-pencil" aria-hidden="true">
-                                            </span>
-                                        </button>
-                                    </span>
-                                </div>
-                                <input type="text" name="change_token_owner_id" class="invisible user_typeahead_id" title="" />
-                                <input type="text" name="change_token_id" class="invisible" title="" value="{{ token.id }}" />
-                            </span>
-                        </form>
-                </td>
+                <td><a href="{{ url_for('list_users', filter='id', value=token.owner.id) }}">{{ token.owner.name }}</a></td>
                 <td>{{ token.creation_date }}</td>
                 <td>
                     <form class="change_expiry_date col-lg-6" action="{{ url_for('change_token_expiry_date') }}" method=post>
@@ -79,35 +63,10 @@
     </table>
 
     <script type="text/javascript">
-        $.each($(".remove_form"), function (i, entry){
-            $(entry).submit(function () {
-                var button = $(entry).find("input[type='submit']");
-                if (button.val() == "Remove") {
-                    button.val("Confirm");
-                    return false;
-                }
-            });
-        });
 
-        $('form').on('click', ".button_change_owner", function(event){
-            var icon = $(this).find('.glyphicon-pencil');
-            if(icon.hasClass('glyphicon-pencil')) {
-                event.preventDefault();
-                    icon.removeClass('glyphicon-pencil')
-                        .addClass('glyphicon-ok');
-                $(this).parent().siblings().children().prop("readonly", false);
-            }
-        });
+        remove_token_init();
 
-        $('form').on('click', ".button_change_expiry_date", function(event){
-            var icon = $(this).find('.glyphicon-pencil');
-            if(icon.hasClass('glyphicon-pencil')) {
-                event.preventDefault();
-                    icon.removeClass('glyphicon-pencil')
-                        .addClass('glyphicon-ok');
-                $(this).parent().siblings().prop("readonly", false);
-            }
-        });
+        change_token_init();
 
         user_typeahead();
     </script>

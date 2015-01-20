@@ -37,3 +37,37 @@ function user_typeahead() {
         });
     });
 }
+
+function remove_token_init(){
+    $.each($(".remove_form"), function (i, entry){
+        $(entry).submit(function () {
+            var button = $(entry).find("input[type='submit']");
+            if (button.val() == "Remove") {
+                button.val("Confirm");
+                return false;
+            }
+        });
+    });
+}
+
+function change_token_init(){
+    /*$('form').on('click', ".button_change_owner", function(event){
+        var icon = $(this).find('.glyphicon-pencil');
+        if(icon.hasClass('glyphicon-pencil')) {
+            event.preventDefault();
+                icon.removeClass('glyphicon-pencil')
+                    .addClass('glyphicon-ok');
+            $(this).parent().siblings().children().prop("readonly", false);
+        }
+    });*/
+
+    $('form').on('click', ".button_change_expiry_date", function(event){
+        var icon = $(this).find('.glyphicon-pencil');
+        if(icon.hasClass('glyphicon-pencil')) {
+            event.preventDefault();
+                icon.removeClass('glyphicon-pencil')
+                    .addClass('glyphicon-ok');
+            $(this).parent().siblings().prop("readonly", false);
+        }
+    });
+}
