@@ -5,7 +5,7 @@ from sqlalchemy import Table
 
 Base = declarative_base()
 
-association_table = Table('association', Base.metadata,
+token_device_table = Table('association', Base.metadata,
     Column('token_id', Integer, ForeignKey('tokens.id')),
     Column('device_id', Integer, ForeignKey('devices.id'))
 )
@@ -34,9 +34,12 @@ class User(Base):
     welcome_sound = Column(String)
     tokens = relationship('Token', lazy='dynamic', backref='owner')
 
+
 class Device(Base):
     __tablename__ = 'devices'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    creation_date = Column(Date)
     name = Column(String)
-    tokens = relationship('Token', secondary=association_table, backref='devices')
+    pubkey = Column(String)
+    tokens = relationship('Token', secondary=token_device_table, backref='devices')

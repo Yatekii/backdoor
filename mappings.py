@@ -18,13 +18,6 @@ import models
 app = Flask(__name__)
 app.static_folder = 'static'
 app.secret_key = 'adsjkfhasdjkfhjkasdhfkasdjhfkloajshdfjskdf'
-menu_activator = 'class=active'
-active = {
-    'overview': '',
-    'users': '',
-    'tokens': '',
-    'logs': ''
-}
 
 
 def check_secret():
@@ -37,6 +30,7 @@ def check_secret():
                     abort(403)
         return inner
     return checker_helper
+
 
 def contains_secret():
     return True
@@ -84,13 +78,11 @@ def overview():
 @check_secret()
 @backdoor.handle_dbsession()
 def list_users(session, filter, value):
+    active = 'list_users'
     if filter == 'default' or value == 'all':
         users = session.query(models.User).all()
     else:
         users = session.query(models.User).filter_by(**{filter: value}).all()
-    for key in active.keys():
-        active[key] = ''
-    active['users'] = menu_activator
     return render_template('list_users.html', active=active, date=backdoor.today(), users=users, previous=dict(request.args.items(multi=False)))
 
 
@@ -197,14 +189,12 @@ def change_user_nethzid(session):
 @check_secret()
 @backdoor.handle_dbsession()
 def list_tokens(session, filter, value):
+    active = 'list_tokens'
     if filter == 'default' or value == 'all':
         tokens = backdoor.list_tokens()
     else:
         tokens = backdoor.list_tokens(**{filter: value})
     session.add_all(tokens)
-    for key in active.keys():
-        active[key] = ''
-    active['tokens'] = menu_activator
     return render_template('list_tokens.html', active=active, date=backdoor.today(), tokens=tokens, previous=dict(request.args.items(multi=False)))
 
 
@@ -326,6 +316,98 @@ def change_token_expiry_date(session):
     return redirect(url_for('list_tokens'))
 
 
+@app.route('/list_devices/', defaults={'filter': 'default', 'value': 'all'})
+@app.route('/list_devices/<filter>/<value>/', methods=['POST', 'GET'])
+@check_secret()
+@backdoor.handle_dbsession()
+def list_devices(session, filter, value):
+    active = 'list_devices'
+    if filter == 'default' or value == 'all':
+        devices = session.query(models.Device).all()
+    else:
+        devices = session.query(models.Device).filter_by(**{filter: value}).all()
+    return render_template('list_devices.html', active=active, date=backdoor.today(), devices=devices, previous=dict(request.args.items(multi=False)))
+
+@app.route('/add_device', methods=['POST'])
+@check_secret()
+@backdoor.handle_dbsession()
+def add_device(session):
+    error = False
+    if not error:
+        backdoor.create_device(
+            name=request.form['add_device_name'],
+            pubkey=request.form['add_device_pubkey'],
+            creation_date=backdoor.today()
+        )
+        flash('New device was created successfully', 'success')
+        return redirect(url_for('list_devices'))
+    else:
+        return redirect(url_for(
+            'list_devices',
+            device_name=request.form['add_device_name'],
+            device_pubkey=request.form['add_device_pubkey']
+        ))
+
+
+@app.route('/remove_device', methods=['POST'])
+@check_secret()
+def remove_device():
+    backdoor.remove_device_by_filter(id=request.form['device_id'])
+    flash('Device was removed successfully')
+    return redirect(url_for('list_devices'))
+
+
+@app.route('/change_device_name', methods=['POST'])
+@check_secret()
+@backdoor.handle_dbsession()
+def change_device_name(session):
+    error = False
+    device = session.query(models.Device).filter_by(id=request.form.get('change_device_id')).first()
+    if not device:
+        error = True
+        flash('Device does not exist. Check that you use valid parameters', 'danger')
+
+    if not error:
+        device.name = request.form['change_device_name']
+        session.add(device)
+        session.commit()
+        flash('Device #%s renamed to %s.' % (device.id, device.name), 'success')
+    return redirect(url_for('list_devices'))
+
+
+@app.route('/change_device_pubkey', methods=['POST'])
+@check_secret()
+@backdoor.handle_dbsession()
+def change_device_pubkey(session):
+    error = False
+    device = session.query(models.Device).filter_by(id=request.form.get('change_device_id')).first()
+    if not device:
+        error = True
+        flash('Device does not exist. Check that you use valid parameters', 'danger')
+
+    if not error:
+        device.pubkey = request.form['change_device_pubkey']
+        session.add(device)
+        session.commit()
+        flash('Device #%s has new pubkey.' % device.id, 'success')
+    return redirect(url_for('list_devices'))
+
+
+@app.route('/list_sounds/', defaults={'filter': 'default', 'value': 'all'})
+@app.route('/list_sounds/<filter>/<value>/', methods=['POST', 'GET'])
+@check_secret()
+@backdoor.handle_dbsession()
+def list_sounds(session, filter, value):
+    active = 'list_sounds'
+    if filter == 'default' or value == 'all':
+        tokens = backdoor.list_tokens()
+    else:
+        tokens = backdoor.list_tokens(**{filter: value})
+    session.add_all(tokens)
+    return render_template('list_tokens.html', active=active, date=backdoor.today(), tokens=tokens, previous=dict(request.args.items(multi=False)))
+
+
 @app.route('/logs')
 def logs():
+    active = 'logs'
     return redirect(url_for('list_users'))

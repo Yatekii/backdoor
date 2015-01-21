@@ -87,6 +87,7 @@ def remove_token_by_filter(session, *args, **kwargs):
     session.commit()
     session.close()
 
+
 @handle_dbsession()
 def revoke_token(session, id):
     token = session.query(models.Token).filter_by(id=id).first()
@@ -106,6 +107,22 @@ def activate_token(session, id):
             token.expiry_date = date
             return token.expiry_date
     return False
+
+
+@handle_dbsession()
+def create_device(session, *args, **kwargs):
+    device = models.Device(*args, **kwargs)
+    if not orm.session.object_session(device):
+        session.add(device)
+    session.commit()
+    session.close()
+
+
+@handle_dbsession()
+def remove_device_by_filter(session, *args, **kwargs):
+    session.delete(session.query(models.Device).filter_by(*args, **kwargs).first())
+    session.commit()
+    session.close()
 
 
 @handle_dbsession()
