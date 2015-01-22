@@ -1,6 +1,6 @@
+import datetime
 import functools
 import re
-
 
 from flask import Flask, flash
 from flask import request
@@ -11,7 +11,7 @@ from flask import abort
 from flask import make_response
 
 import config
-import backdoor
+import helpers
 import models
 
 
@@ -24,22 +24,20 @@ def check_secret():
     def checker_helper(f):
         @functools.wraps(f)
         def inner(*args, **kwargs):
-                if contains_secret():
-                    return f(*args, **kwargs)
-                else:
-                    abort(403)
+            request.cookies.get('bastli_backdoor_shared_secret') == config.shared_secret
+            if True:
+                return f(*args, **kwargs)
+            else:
+                abort(403)
+
         return inner
+
     return checker_helper
-
-
-def contains_secret():
-    return True
-    return request.cookies.get('bastli_backdoor_shared_secret') == config.shared_secret
 
 
 @app.route('/test')
 def test():
-    return backdoor.users_to_json_by_filter()
+    return helpers.users_to_json_by_filter()
 
 
 @app.route('/set_cookie')
@@ -55,15 +53,17 @@ def home():
     return redirect(url_for('list_users'))
 
 
-@app.route('/json/<type>', methods=['GET'])
+@app.route('/json/<model>', methods=['GET'])
 @check_secret()
-def json(type):
-    print(type)
-    if type == 'users':
-        return backdoor.users_to_json_by_filter()
-    elif type == 'devices':
-        return backdoor.devices_to_json_by_filter()
+def json(model):
+    if model == 'users':
+        return helpers.users_to_json_by_filter()
+    elif model == 'devices':
+        return helpers.devices_to_json_by_filter()
     abort(403)
+
+
+# --------------------------------------------------    OVERVIEW    -------------------------------------------------- #
 
 
 @app.route('/overview')
@@ -72,25 +72,34 @@ def overview():
     return redirect(url_for('list_users'))
 
 
-################################### USERS ##############################################
+# --------------------------------------------------      USER      -------------------------------------------------- #
 
 
-@app.route('/list_users/', defaults={'filter': 'default', 'value': 'all'})
-@app.route('/list_users/<filter>/<value>/', methods=['POST', 'GET'])
+@app.route('/list_users/', defaults={'attribute': 'default', 'value': 'all'})
+@app.route('/list_users/<attribute>/<value>/', methods=['POST', 'GET'])
 @check_secret()
-@backdoor.handle_dbsession()
-def list_users(session, filter, value):
+@helpers.handle_dbsession()
+def list_users(session, attribute, value):
     active = 'list_users'
-    if filter == 'default' or value == 'all':
+
+    if attribute == 'default' or value == 'all':
         users = session.query(models.User).all()
     else:
-        users = session.query(models.User).filter_by(**{filter: value}).all()
-    return render_template('list_users.html', active=active, date=backdoor.today(), users=users, previous=dict(request.args.items(multi=False)))
+        users = session.query(models.User).filter_by(**{attribute: value}).all()
+
+    return render_template(
+        'list_users.html',
+        active=active,
+        date=helpers.today(),
+        users=users,
+        previous=dict(request.args.items(multi=False))
+    )
 
 
 @app.route('/add_user', methods=['POST'])
 @check_secret()
-def add_user():
+@helpers.handle_dbsession()
+def add_user(session):
     error = False
 
     if not re.match(r'[\w.-]+@[\w.-]+.\w+', request.form['add_user_email']):
@@ -102,9 +111,17 @@ def add_user():
         flash('Please enter a valid number between 0 and 999 as the userlevel.', 'danger')
 
     if not error:
-        backdoor.create_user(creation_date=backdoor.today(), name=request.form['add_user_name'], level=int(request.form['add_user_level']), email=request.form['add_user_email'], nethzid=request.form['add_user_nethzid'])
+        user = models.User(
+            creation_date=helpers.today(),
+            name=request.form['add_user_name'],
+            level=int(request.form['add_user_level']),
+            email=request.form['add_user_email'],
+            nethzid=request.form['add_user_nethzid']
+        )
+        session.add(user)
         flash('New user was created successfully', 'success')
         return redirect(url_for('list_users'))
+
     else:
         return redirect(url_for(
             'list_users',
@@ -115,23 +132,32 @@ def add_user():
         ))
 
 
-
 @app.route('/remove_user', methods=['POST'])
 @check_secret()
-def remove_user():
-    backdoor.remove_user_by_filter(id=request.form['user_id'])
-    flash('User was removed successfully', 'success')
+@helpers.handle_dbsession()
+def remove_user(session):
+    user = session.query(models.User).filter_by(id=request.form['user_id']).first()
+
+    if user:
+        session.delete(user)
+        flash('User %s was removed successfully.' % user.name, 'success')
+
+    else:
+        flash('User with id %d was not found.' % request.form['user_id'], 'danger')
+
     return redirect(url_for('list_users'))
+
 
 @app.route('/change_user_level', methods=['POST'])
 @check_secret()
-@backdoor.handle_dbsession()
+@helpers.handle_dbsession()
 def change_user_level(session):
     error = False
     user = session.query(models.User).filter_by(id=request.form.get('change_user_id')).first()
+
     if not user:
         error = True
-        flash('User does not exist. Check that you use valid parameters', 'danger')
+        flash('User with id %s was not found.' % request.form.get('change_user_id'), 'danger')
 
     if int(request.form['change_user_level']) not in range(0, 999):
         error = True
@@ -141,18 +167,21 @@ def change_user_level(session):
         user.level = int(request.form['change_user_level'])
         session.add(user)
         session.commit()
-        flash('User %s has now level %d.' % (user.name, user.level), 'success')
+        flash('User %s is now level %d.' % (user.name, user.level), 'success')
+
     return redirect(url_for('list_users'))
+
 
 @app.route('/change_user_email', methods=['POST'])
 @check_secret()
-@backdoor.handle_dbsession()
+@helpers.handle_dbsession()
 def change_user_email(session):
     error = False
     user = session.query(models.User).filter_by(id=request.form.get('change_user_id')).first()
+
     if not user:
         error = True
-        flash('User does not exist. Check that you use valid parameters', 'danger')
+        flash('User with id %s was not found.' % request.form.get('change_user_id'), 'danger')
 
     if not re.match(r'[\w.-]+@[\w.-]+.\w+', request.form['change_user_email']):
         error = True
@@ -163,71 +192,88 @@ def change_user_email(session):
         session.add(user)
         session.commit()
         flash('User %s has now email %s.' % (user.name, user.email), 'success')
+
     return redirect(url_for('list_users'))
+
 
 @app.route('/change_user_nethzid', methods=['POST'])
 @check_secret()
-@backdoor.handle_dbsession()
+@helpers.handle_dbsession()
 def change_user_nethzid(session):
     error = False
     user = session.query(models.User).filter_by(id=request.form.get('change_user_id')).first()
+
     if not user:
         error = True
-        flash('User does not exist. Check that you use valid parameters', 'danger')
+        flash('User with id %s was not found.' % request.form.get('change_user_id'), 'danger')
 
     if not error:
         user.nethzid = request.form['change_user_nethzid']
         session.add(user)
         session.commit()
         flash('User %s has now nethzid %s.' % (user.name, user.nethzid), 'success')
+
     return redirect(url_for('list_users'))
 
 
-######################################## TOKENS #############################################
+# --------------------------------------------------     TOKENS     -------------------------------------------------- #
 
 
-@app.route('/list_tokens/', defaults={'filter': 'default', 'value': 'all'})
-@app.route('/list_tokens/<filter>/<value>/', methods=['POST', 'GET'])
+@app.route('/list_tokens/', defaults={'attribute': 'default', 'value': 'all'})
+@app.route('/list_tokens/<attribute>/<value>/', methods=['POST', 'GET'])
 @check_secret()
-@backdoor.handle_dbsession()
-def list_tokens(session, filter, value):
+@helpers.handle_dbsession()
+def list_tokens(session, attribute, value):
     active = 'list_tokens'
-    if filter == 'default' or value == 'all':
-        tokens = backdoor.list_tokens()
+
+    if attribute == 'default' or value == 'all':
+        tokens = session.query(models.Token).all()
     else:
-        tokens = backdoor.list_tokens(**{filter: value})
-    session.add_all(tokens)
-    return render_template('list_tokens.html', active=active, date=backdoor.today(), tokens=tokens, previous=dict(request.args.items(multi=False)))
+        tokens = session.query(models.Token).filter_by(**{attribute: value}).all()
+
+    return render_template(
+        'list_tokens.html',
+        active=active,
+        date=helpers.today(),
+        tokens=tokens,
+        previous=dict(request.args.items(multi=False))
+    )
 
 
 @app.route('/add_token', methods=['POST'])
 @check_secret()
-@backdoor.handle_dbsession()
+@helpers.handle_dbsession()
 def add_token(session):
-
+    error = False
     owner = session.query(models.User).filter_by(id=request.form['add_token_owner_id']).first()
 
-    error = False
-
-    if not owner and request.form['add_token_owner'] != 'FREE':
+    if not owner:
         error = True
-        flash('User does not exist. Please check your entry for owner!', 'danger')
+        owner_query = session.query(models.User).filter_by(name=request.form['add_token_owner_id'])
+        if owner_query.count() == 1:
+            error = False
+            owner = owner_query.first()
+        else:
+            flash('User with id %s was not found.' % request.form.get('add_token_owner_id'), 'danger')
 
+    expiry_date = helpers.today()
     try:
-        expiry_date = backdoor.str_to_date(request.form['add_token_expiry_date'])
+        expiry_date = helpers.str_to_date(request.form['add_token_expiry_date'])
     except BaseException:
         error = True
-        flash('Expiry date has a bad format. Please check expiry date (Should be YYYY-mm-dd)!', 'danger')
+        flash('Expiry date has a bad format. It should be YYYY-mm-dd.', 'danger')
 
     if not error:
-        backdoor.create_token(
-            value=backdoor.generate_token(),
+        token = models.Token(
+            value=helpers.generate_token(),
             owner=owner,
             expiry_date=expiry_date,
-            creation_date=backdoor.today()
+            creation_date=helpers.today()
         )
-        flash('New token was created successfully', 'success')
+        session.add(token)
+        flash('New token was successfully created.', 'success')
         return redirect(url_for('list_tokens'))
+
     else:
         return redirect(url_for(
             'list_tokens',
@@ -239,134 +285,150 @@ def add_token(session):
 
 @app.route('/remove_token', methods=['POST'])
 @check_secret()
-def remove_token():
-    backdoor.remove_token_by_filter(id=request.form['token_id'])
-    flash('Token was removed successfully')
+@helpers.handle_dbsession()
+def remove_token(session):
+    token = session.query(models.Token).filter_by(id=request.form['token_id']).first()
+
+    if token:
+        session.delete(token)
+        flash('Token with id %d was removed successfully.' % token.id, 'success')
+
+    else:
+        flash('Token with id %d was not found.' % request.form['token_id'], 'danger')
+
     return redirect(url_for('list_tokens'))
 
 
 @app.route('/revoke_token', methods=['POST'])
 @check_secret()
-def revoke_token():
-    if backdoor.revoke_token(request.form['token_id']):
-        flash('Token was has successfully been revoked', 'success')
+@helpers.handle_dbsession()
+def revoke_token(session):
+    token = session.query(models.Token).filter_by(id=request.form['token_id']).first()
+
+    if token:
+        token.expiry_date = helpers.today() - datetime.timedelta(days=1)
+        flash('Token with id %d was has successfully been revoked' % token.id, 'success')
+
     else:
-        flash('Revoking of Token failed. Are you sure that Token exists?', 'danger')
+        flash('Token with id %d was not found.' % request.form['token_id'], 'danger')
+
     return redirect(url_for('list_tokens'))
 
 
 @app.route('/activate_token', methods=['POST'])
 @check_secret()
-def activate_token():
-    expiry_date = backdoor.activate_token(request.form['token_id'])
-    if expiry_date:
-        flash('Token expiry date was has successfully been extended to %s' % expiry_date, 'success')
-    else:
-        flash('Token expiry date hasn\'t been modified. Could be due to broken config. Please contact an administrator.', 'danger')
-    return redirect(url_for('list_tokens'))
+@helpers.handle_dbsession()
+def activate_token(session):
+    error = True
+    token = session.query(models.Token).filter_by(id=request.form['token_id']).first()
 
-
-@app.route('/change_token_owner', methods=['POST'])
-@check_secret()
-@backdoor.handle_dbsession()
-def change_token_owner(session):
-    error = False
-    token = session.query(models.Token).filter_by(id=request.form.get('change_token_id')).first()
-    if not token:
-        error = True
-        flash('Token does not exist. Check that you use valid parameters', 'danger')
-
-    new_owner = session.query(models.User).filter_by(id=request.form.get('change_token_owner_id')).first()
-    if not new_owner:
-        error = True
-        new_owner_query = session.query(models.User).filter_by(name=request.form.get('change_token_owner_name'))
-        if new_owner_query.count() == 1:
+    if token:
+        for date in config.semester_end:
+            if date <= helpers.today():
+                continue
+            token.expiry_date = date
             error = False
-            new_owner = new_owner_query.first()
+            flash('Token expiry date was has successfully been extended to %s' % date, 'success')
+            break
 
-    if not new_owner and request.form.get('change_token_owner_name') != 'FREE':
-        flash('User does not exist: %s' % new_owner, 'danger')
+    if error:
+        flash('Token expiry date hasn\'t been modified. Please contact an administrator.', 'danger')
 
-    if not error:
-        token.owner = new_owner
-        session.add(token)
-        session.commit()
-        flash('Token #%s has new owner %s.' % (token.id, token.owner.name), 'success')
     return redirect(url_for('list_tokens'))
+
 
 @app.route('/change_token_expiry_date', methods=['POST'])
 @check_secret()
-@backdoor.handle_dbsession()
+@helpers.handle_dbsession()
 def change_token_expiry_date(session):
     error = False
     token = session.query(models.Token).filter_by(id=request.form.get('change_token_id')).first()
+
     if not token:
         error = True
-        flash('Token does not exist. Check that you use valid parameters', 'danger')
+        flash('Token with id %d was not found.' % request.form['change_token_id'], 'danger')
 
+    new_expiry_date = helpers.today()
     try:
-        new_expiry_date = backdoor.str_to_date(request.form['change_token_expiry_date'])
+        new_expiry_date = helpers.str_to_date(request.form['change_token_expiry_date'])
     except BaseException:
         error = True
-        flash('Expiry date has a bad format. Please check expiry date (Should be YYYY-mm-dd)!', 'danger')
+        flash('Expiry date has a bad format. It should be YYYY-mm-dd!', 'danger')
 
     if not error:
         token.expiry_date = new_expiry_date
         session.add(token)
         session.commit()
-        flash('Token #%s has expires %s.' % (token.id, token.expiry_date), 'success')
+        flash('Token #%d expires on %s.' % (token.id, token.expiry_date), 'success')
+
     return redirect(url_for('list_tokens'))
 
 
 @app.route('/link_token_to_device', methods=['POST'])
 @check_secret()
-@backdoor.handle_dbsession()
+@helpers.handle_dbsession()
 def link_token_to_device(session):
-    print(request.form)
     error = False
     device = session.query(models.Device).filter_by(id=request.form.get('link_token_device_id')).first()
+
     if not device:
         error = True
-        flash('Device does not exist. Check that you use valid parameters', 'danger')
+        flash('Device with id %d was not found.' % request.form['link_token_device_id'], 'danger')
 
     token = session.query(models.Token).filter_by(id=request.form.get('link_token_id')).first()
-    if not device:
+    if not token:
         error = True
-        flash('Token does not exist. Check that you use valid parameters', 'danger')
+        flash('Token with id %d was not found.' % request.form['link_token_id'], 'danger')
 
     if not error:
         device.tokens.append(token)
         session.add(device)
         session.commit()
-        flash('Token #%s now available on device %s' % (token.id, device.name), 'success')
+        flash('Token with id %d now available on device %s' % (token.id, device.name), 'success')
+
     return redirect(url_for('list_tokens'))
 
 
-@app.route('/list_devices/', defaults={'filter': 'default', 'value': 'all'})
-@app.route('/list_devices/<filter>/<value>/', methods=['POST', 'GET'])
+# --------------------------------------------------     DEVICE     -------------------------------------------------- #
+
+
+@app.route('/list_devices/', defaults={'attribute': 'default', 'value': 'all'})
+@app.route('/list_devices/<attribute>/<value>/', methods=['POST', 'GET'])
 @check_secret()
-@backdoor.handle_dbsession()
-def list_devices(session, filter, value):
+@helpers.handle_dbsession()
+def list_devices(session, attribute, value):
     active = 'list_devices'
-    if filter == 'default' or value == 'all':
+
+    if attribute == 'default' or value == 'all':
         devices = session.query(models.Device).all()
     else:
-        devices = session.query(models.Device).filter_by(**{filter: value}).all()
-    return render_template('list_devices.html', active=active, date=backdoor.today(), devices=devices, previous=dict(request.args.items(multi=False)))
+        devices = session.query(models.Device).filter_by(**{attribute: value}).all()
+
+    return render_template(
+        'list_devices.html',
+        active=active,
+        date=helpers.today(),
+        devices=devices,
+        previous=dict(request.args.items(multi=False))
+    )
+
 
 @app.route('/add_device', methods=['POST'])
 @check_secret()
-@backdoor.handle_dbsession()
+@helpers.handle_dbsession()
 def add_device(session):
     error = False
+
     if not error:
-        backdoor.create_device(
+        device = models.Device(
             name=request.form['add_device_name'],
             pubkey=request.form['add_device_pubkey'],
-            creation_date=backdoor.today()
+            creation_date=helpers.today()
         )
+        session.add(device)
         flash('New device was created successfully', 'success')
         return redirect(url_for('list_devices'))
+
     else:
         return redirect(url_for(
             'list_devices',
@@ -377,60 +439,63 @@ def add_device(session):
 
 @app.route('/remove_device', methods=['POST'])
 @check_secret()
-def remove_device():
-    backdoor.remove_device_by_filter(id=request.form['device_id'])
-    flash('Device was removed successfully')
+@helpers.handle_dbsession()
+def remove_device(session):
+    device = session.query(models.Device).filter_by(id=request.form['device_id']).first()
+
+    if device:
+        session.delete(device)
+        flash('Device with id %d was successfully removed.' % request.form['device_id'])
+
+    else:
+        flash('Device with id %d was not found.' % request.form['device_id'], 'danger')
+
     return redirect(url_for('list_devices'))
 
 
 @app.route('/change_device_name', methods=['POST'])
 @check_secret()
-@backdoor.handle_dbsession()
+@helpers.handle_dbsession()
 def change_device_name(session):
     error = False
     device = session.query(models.Device).filter_by(id=request.form.get('change_device_id')).first()
+
     if not device:
         error = True
-        flash('Device does not exist. Check that you use valid parameters', 'danger')
+        flash('Device with id %d was not found.' % request.form['change_device_id'], 'danger')
 
     if not error:
         device.name = request.form['change_device_name']
-        session.add(device)
-        session.commit()
-        flash('Device #%s renamed to %s.' % (device.id, device.name), 'success')
+        flash('Device with id %d renamed to %s.' % (device.id, device.name), 'success')
+
     return redirect(url_for('list_devices'))
 
 
 @app.route('/change_device_pubkey', methods=['POST'])
 @check_secret()
-@backdoor.handle_dbsession()
+@helpers.handle_dbsession()
 def change_device_pubkey(session):
     error = False
     device = session.query(models.Device).filter_by(id=request.form.get('change_device_id')).first()
+
     if not device:
         error = True
-        flash('Device does not exist. Check that you use valid parameters', 'danger')
+        flash('Device with id %d was not found.' % request.form['change_device_id'], 'danger')
 
     if not error:
         device.pubkey = request.form['change_device_pubkey']
-        session.add(device)
-        session.commit()
-        flash('Device #%s has new pubkey.' % device.id, 'success')
+        flash('Device with id %d has new pubkey.' % device.id, 'success')
+
     return redirect(url_for('list_devices'))
 
 
-@app.route('/list_sounds/', defaults={'filter': 'default', 'value': 'all'})
-@app.route('/list_sounds/<filter>/<value>/', methods=['POST', 'GET'])
+@app.route('/list_sounds/', defaults={'attribute': 'default', 'value': 'all'})
+@app.route('/list_sounds/<attribute>/<value>/', methods=['POST', 'GET'])
 @check_secret()
-@backdoor.handle_dbsession()
-def list_sounds(session, filter, value):
+@helpers.handle_dbsession()
+def list_sounds(session, attribute, value):
     active = 'list_sounds'
-    if filter == 'default' or value == 'all':
-        tokens = backdoor.list_tokens()
-    else:
-        tokens = backdoor.list_tokens(**{filter: value})
-    session.add_all(tokens)
-    return render_template('list_tokens.html', active=active, date=backdoor.today(), tokens=tokens, previous=dict(request.args.items(multi=False)))
+    return redirect(url_for('list_devices'))
 
 
 @app.route('/logs')
