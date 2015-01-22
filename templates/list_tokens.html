@@ -18,7 +18,7 @@
         {% for token in tokens %}
             <tr>
                 <td>{{ token.id }}</td>
-                <td><a href="{{ url_for('list_users', filter='id', value=token.owner.id) }}">{{ token.owner.name or 'FREE' }}</a></td>
+                <td><a href="{{ url_for('list_users', attribute='id', value=token.owner.id) }}">{{ token.owner.name or 'FREE' }}</a></td>
                 <td>
                     <form class="change_token_expiry_date col-lg-6" action="{{ url_for('change_token_expiry_date') }}" method=post>
                         <div class="input-group">
@@ -58,7 +58,7 @@
                 <td colspan="6" style="text-align: left">
                     {%  for device in token.devices %}
                         <div class="btn-group" role="group" aria-label="..." style="float: left">
-                            <button type="button" class="btn btn-default" onclick="window.location.href='{{ url_for('list_devices', filter='id', value=device.id) }}'">{{ device.id }}</button>
+                            <button type="button" class="btn btn-default" onclick="window.location.href='{{ url_for('list_devices', attribute='id', value=device.id) }}'">{{ device.id }}</button>
                             <button type="button" class="btn btn-default"><span class="glyphicon-minus"></span></button>
                         </div>
                     {% endfor %}
