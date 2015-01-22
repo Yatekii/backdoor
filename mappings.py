@@ -61,6 +61,8 @@ def json(type):
     print(type)
     if type == 'users':
         return backdoor.users_to_json_by_filter()
+    elif type == 'devices':
+        return backdoor.devices_to_json_by_filter()
     abort(403)
 
 
@@ -313,6 +315,30 @@ def change_token_expiry_date(session):
         session.add(token)
         session.commit()
         flash('Token #%s has expires %s.' % (token.id, token.expiry_date), 'success')
+    return redirect(url_for('list_tokens'))
+
+
+@app.route('/link_token_to_device', methods=['POST'])
+@check_secret()
+@backdoor.handle_dbsession()
+def link_token_to_device(session):
+    print(request.form)
+    error = False
+    device = session.query(models.Device).filter_by(id=request.form.get('link_token_device_id')).first()
+    if not device:
+        error = True
+        flash('Device does not exist. Check that you use valid parameters', 'danger')
+
+    token = session.query(models.Token).filter_by(id=request.form.get('link_token_id')).first()
+    if not device:
+        error = True
+        flash('Token does not exist. Check that you use valid parameters', 'danger')
+
+    if not error:
+        device.tokens.append(token)
+        session.add(device)
+        session.commit()
+        flash('Token #%s now available on device %s' % (token.id, device.name), 'success')
     return redirect(url_for('list_tokens'))
 
 

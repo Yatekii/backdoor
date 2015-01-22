@@ -1,8 +1,21 @@
-function findMatches(q, cb) {
+function findMatchesUsers(q, cb) {
     $.ajax('https://backdoor.yatekii.ch/json/users', {q: q}).done(function (json) {
         var substrRegex = new RegExp(q, 'i');
         var matches = [];
         $.each($.parseJSON(json).users, function (i, entry) {
+            if (substrRegex.test(entry.name)) {
+                matches.push(entry);
+            }
+        });
+        cb(matches);
+    });
+}
+
+function findMatchesDevices(q, cb) {
+    $.ajax('https://backdoor.yatekii.ch/json/devices', {q: q}).done(function (json) {
+        var substrRegex = new RegExp(q, 'i');
+        var matches = [];
+        $.each($.parseJSON(json).devices, function (i, entry) {
             if (substrRegex.test(entry.name)) {
                 matches.push(entry);
             }
@@ -21,12 +34,39 @@ function user_typeahead() {
             },
             {
                 name: 'owners',
-                source: findMatches,
+                source: findMatchesUsers,
                 displayKey: 'name'
             }
         );
 
         var input_id = $(entry).find('.user_typeahead_id');
+
+        input.bind('typeahead:selected', function (obj, datum, name) {
+            input_id.val(datum.id);
+        });
+
+        input.bind('typeahead:opened', function (obj, datum, name) {
+            input_id.val('');
+        });
+    });
+}
+
+function device_typeahead() {
+    $.each($('.device_typeahead'), function (i, entry){
+        var input = $(entry).find('.device_typeahead_name');
+        input.typeahead({
+                minLength: 1,
+                highlight: false,
+                hint: false
+            },
+            {
+                name: 'devices',
+                source: findMatchesDevices,
+                displayKey: 'name'
+            }
+        );
+
+        var input_id = $(entry).siblings().filter('.device_typeahead_id');
 
         input.bind('typeahead:selected', function (obj, datum, name) {
             input_id.val(datum.id);
@@ -48,18 +88,6 @@ function remove_token_init(){
             }
         });
     });
-}
-
-function change_token_init(){
-    /*$('form').on('click', ".button_change_owner", function(event){
-        var icon = $(this).find('.glyphicon-pencil');
-        if(icon.hasClass('glyphicon-pencil')) {
-            event.preventDefault();
-                icon.removeClass('glyphicon-pencil')
-                    .addClass('glyphicon-ok');
-            $(this).parent().siblings().children().prop("readonly", false);
-        }
-    });*/
 }
 
 function init_edit_field(name){

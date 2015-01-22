@@ -133,3 +133,11 @@ def users_to_json_by_filter(session, **kwargs):
     for user in users:
         json_string += '{\n"name": "%s",\n "id": "%s"\n}, ' % (user.name, user.id)
     return json_string[:-2] + ']}'
+
+@handle_dbsession()
+def devices_to_json_by_filter(session, **kwargs):
+    devices = session.query(models.Device).filter_by(**kwargs)
+    json_string = '{"devices": ['
+    for device in devices:
+        json_string += '{\n"name": "%s",\n "id": "%s"\n}, ' % (device.name, device.id)
+    return json_string[:-2] + ']}'

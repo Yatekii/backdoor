@@ -8,8 +8,8 @@
         <tr>
             <td>ID</td>
             <td>Owner</td>
-            <td>Creation Date</td>
             <td>Expiry Date</td>
+            <td>Creation Date</td>
             <td>Remove?</td>
             <td>Revoke?</td>
         </tr>
@@ -18,8 +18,7 @@
         {% for token in tokens %}
             <tr>
                 <td>{{ token.id }}</td>
-                <td><a href="{{ url_for('list_users', filter='id', value=token.owner.id) }}">{{ token.owner.name }}</a></td>
-                <td>{{ token.creation_date }}</td>
+                <td><a href="{{ url_for('list_users', filter='id', value=token.owner.id) }}">{{ token.owner.name or 'FREE' }}</a></td>
                 <td>
                     <form class="change_token_expiry_date col-lg-6" action="{{ url_for('change_token_expiry_date') }}" method=post>
                         <div class="input-group">
@@ -34,6 +33,7 @@
                         <input type="text" name="change_token_id" class="invisible" title="" value="{{ token.id }}" />
                     </form>
                 </td>
+                <td>{{ token.creation_date }}</td>
                 <td>
                     <form class="remove_form" action="{{ url_for('remove_token') }}" method=post>
                         <input type="submit" class="btn btn-default btn-danger" value="Remove" />
@@ -54,6 +54,29 @@
                     {% endif %}
                 </td>
             </tr>
+            <tr>
+                <td colspan="6" style="text-align: left">
+                    {%  for device in token.devices %}
+                        <div class="btn-group" role="group" aria-label="..." style="float: left">
+                            <button type="button" class="btn btn-default" onclick="window.location.href='{{ url_for('list_devices', filter='id', value=device.id) }}'">{{ device.id }}</button>
+                            <button type="button" class="btn btn-default"><span class="glyphicon-minus"></span></button>
+                        </div>
+                    {% endfor %}
+                        <form action="{{ url_for('link_token_to_device') }}" method="POST">
+                            <div class="input-group device_typeahead">
+                                <input type="text" name="link_token_name" class="typeahead form-control device_typeahead_name" title="Device" value="" />
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default button_link_token" type="submit">
+                                        <span class="glyphicon glyphicon-ok" aria-hidden="true">
+                                        </span>
+                                    </button>
+                                </span>
+                            </div>
+                            <input type="text" name="link_token_device_id" class="invisible device_typeahead_id" title="" value="" />
+                            <input type="text" name="link_token_id" class="invisible" title="" value="{{ token.id }}" />
+                        </form>
+                </td>
+            </tr>
         {% else %}
             <tr>
                 <td colspan="5" id="no_tokens">Unbelievable. No tokens here so far.</td>
@@ -67,5 +90,6 @@
         init_edit_field('.button_change_token_expiry_date');
 
         user_typeahead();
+        device_typeahead();
     </script>
 {% endblock %}
