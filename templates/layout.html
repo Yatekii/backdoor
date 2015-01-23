@@ -53,28 +53,27 @@
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-sm-3 col-md-2 sidebar">
+        <div class="col-lg-1 sidebar">
             <ul class="nav nav-sidebar">
-		    <li {% if active == 'overview' %} class="active" {% endif %}><a href="{{ url_for('overview') }}">Overview</a></li>
-		    <li {% if active == 'list_users' %} class="active" {% endif %}><a href="{{ url_for('list_users') }}">Users</a></li>
-		    <li {% if active == 'list_tokens' %} class="active" {% endif %}><a href="{{ url_for('list_tokens') }}">Tokens</a></li>
-            <li {% if active == 'list_devices' %} class="active" {% endif %}><a href="{{ url_for('list_devices') }}">Devices</a></li>
-            <li {% if active == 'list_sounds' %} class="active" {% endif %}><a href="{{ url_for('list_sounds') }}">Sounds</a></li>
-		    <li {% if active == 'logs' %} class="active" {% endif %}><a href="{{ url_for('logs') }}">Logs</a></li>
+                <li {% if active == 'overview' %} class="active" {% endif %}><a href="{{ url_for('overview') }}">Overview</a></li>
+                <li {% if active == 'list_users' %} class="active" {% endif %}><a href="{{ url_for('list_users') }}">Users</a></li>
+                <li {% if active == 'list_tokens' %} class="active" {% endif %}><a href="{{ url_for('list_tokens') }}">Tokens</a></li>
+                <li {% if active == 'list_devices' %} class="active" {% endif %}><a href="{{ url_for('list_devices') }}">Devices</a></li>
+                <li {% if active == 'list_sounds' %} class="active" {% endif %}><a href="{{ url_for('list_sounds') }}">Sounds</a></li>
+                <li {% if active == 'logs' %} class="active" {% endif %}><a href="{{ url_for('logs') }}">Logs</a></li>
             </ul>
         </div>
-        <div class="col-sm-9 main">
-
-		{% for category, message in get_flashed_messages(with_categories=true) %}
-		    <div class="alert alert-{{ category }}" role="alert"><strong>{{ message }}</strong></div>
-		      {% endfor %}
-		        {% block body %}{% endblock %}
+        <div class="col-lg-11 main">
+            {% for category, message in get_flashed_messages(with_categories=true) %}
+                <div class="alert alert-{{ category }} col-lg-12" role="alert"><strong>{{ message }}</strong></div>
+            {% endfor %}
+            {% block body %}{% endblock %}
         </div>
     </div>
 
     <!-- FOOTER -->
 
-    <hr>
+    <hr />
     <footer>
         <p>© Bastli™ 2015</p>
     </footer>

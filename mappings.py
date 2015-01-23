@@ -357,8 +357,6 @@ def change_token_expiry_date(session):
 
     if not error:
         token.expiry_date = new_expiry_date
-        session.add(token)
-        session.commit()
         flash('Token #%d expires on %s.' % (token.id, token.expiry_date), 'success')
 
     return redirect(url_for('list_tokens'))
@@ -382,9 +380,30 @@ def link_token_to_device(session):
 
     if not error:
         device.tokens.append(token)
-        session.add(device)
-        session.commit()
         flash('Token with id %d now available on device %s' % (token.id, device.name), 'success')
+
+    return redirect(url_for('list_tokens'))
+
+
+@app.route('/remove_link_token_to_device', methods=['POST'])
+@check_secret()
+@helpers.handle_dbsession()
+def remove_link_token_to_device(session):
+    error = False
+    device = session.query(models.Device).filter_by(id=request.form.get('remove_link_token_to_device_device_id')).first()
+
+    if not device:
+        error = True
+        flash('Device with id %d was not found.' % request.form['link_token_device_id'], 'danger')
+
+    token = session.query(models.Token).filter_by(id=request.form.get('remove_link_token_to_device_token_id')).first()
+    if not token:
+        error = True
+        flash('Token with id %d was not found.' % request.form['link_token_id'], 'danger')
+
+    if not error:
+        device.tokens.remove(token)
+        flash('Token with id %d has no longer access on device %s' % (token.id, device.name), 'success')
 
     return redirect(url_for('list_tokens'))
 

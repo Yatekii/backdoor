@@ -6,25 +6,23 @@
     <table class="table table-hover">
         <thead>
         <tr>
-            <td>ID</td>
-            <td>Name</td>
-            <td>Level</td>
-            <td>Email</td>
-            <td>nethzid</td>
-            <td>Tokens</td>
-            <td>Welcome Sound</td>
-            <td>Creation Date</td>
-            <td>Remove?</td>
+            <td class="col-lg-1">ID</td>
+            <td class="col-lg-2">Name</td>
+            <td class="col-lg-2">Level</td>
+            <td class="col-lg-2">Email</td>
+            <td class="col-lg-2">nethzid</td>
+            <td class="col-lg-1">Welcome Sound</td>
+            <td class="col-lg-1">Creation Date</td>
+            <td class="col-lg-1">Remove?</td>
         </tr>
         </thead>
         <tbody>
         {% for user in users %}
             <tr>
-                <td>
-                    {{ user.id }}</td>
+                <td>{{ user.id }}</td>
                 <td>{{ user.name }}</td>
                 <td>
-                    <form class="change_user_level col-lg-6" action="{{ url_for('change_user_level') }}" method=post>
+                    <form class="change_user_level" action="{{ url_for('change_user_level') }}" method=post>
                         <div class="input-group">
                             <input type="text" name="change_user_level" class="form-control" title="Token owner" value="{{ user.level }}" readonly />
                             <span class="input-group-btn">
@@ -38,7 +36,7 @@
                     </form>
                 </td>
                 <td>
-                    <form class="change_user_email col-lg-6" action="{{ url_for('change_user_email') }}" method=post>
+                    <form class="change_user_email" action="{{ url_for('change_user_email') }}" method=post>
                         <div class="input-group">
                             <input type="text" name="change_user_email" class="form-control" title="Token owner" value="{{ user.email }}" readonly />
                             <span class="input-group-btn">
@@ -52,7 +50,7 @@
                     </form>
                 </td>
                 <td>
-                    <form class="change_user_nethzid col-lg-6" action="{{ url_for('change_user_nethzid') }}" method=post>
+                    <form class="change_user_nethzid" action="{{ url_for('change_user_nethzid') }}" method=post>
                         <div class="input-group">
                             <input type="text" name="change_user_nethzid" class="form-control" title="Token owner" value="{{ user.nethzid }}" readonly />
                             <span class="input-group-btn">
@@ -65,18 +63,9 @@
                         <input type="text" name="change_user_id" class="invisible" title="" value="{{ user.id }}" />
                     </form>
                 </td>
-                <td>[
-                    {%  for token in user.tokens %}
-                        <a href="{{ url_for('list_tokens', attribute='id', value=token.id) }}">{{ token.id }}</a> |
-                    {% else %}
-
-                    {% endfor %}
-                        <a href="{{ url_for('list_tokens', token_owner_id=user.id, token_owner_name=user.name) }}">Add</a>
-                    ]
-                </td>
                 <td>
                     <select name="change_user_welcome_sound" class="form-control">
-                        <option value="">--- NO Sound ---</option>
+                        <option value="">NONE</option>
                         {% for sound in sounds %}
                             <option value="sound['path']" {% if previous['user_welcome_sound'] == sound.path %}selected="selected" {% endif %}>sound['name']</option>
                         {% endfor %}
@@ -85,14 +74,26 @@
                 <td>{{ user.creation_date }}</td>
                 <td>
                     <form action="{{ url_for('remove_user') }}" method=post>
-                        <input type="submit" class="form-control" value="Remove" />
+                        <input type="submit" class="form-control btn-danger" value="Remove" />
                         <input name="user_id" class="form-control invisible" title="User id" value="{{ user.id }}" />
                     </form>
                 </td>
             </tr>
+            <tr>
+                <td colspan="8">
+                    [
+                    {%  for token in user.tokens %}
+                        <a href="{{ url_for('list_tokens', attribute='id', value=token.id) }}">{{ token.id }}</a> |
+                    {% else %}
+
+                    {% endfor %}
+                        <a href="{{ url_for('list_tokens', token_owner_id=user.id, token_owner_name=user.name) }}">+</a>
+                    ]
+                </td>
+            </tr>
         {% else %}
             <tr>
-                <td colspan="5" id="no_users">Unbelievable. No tokens here so far.</td>
+                <td colspan="8" id="no_users">Unbelievable. No tokens here so far.</td>
             </tr>
         {% endfor %}
         </tbody>
