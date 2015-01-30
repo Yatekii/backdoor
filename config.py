@@ -1,13 +1,19 @@
 import datetime
 
-host = '127.0.0.1'
-port = 8001
+webui_host = '127.0.0.1'
+webui_port = 8001
+
+api_host = '127.0.0.1'
+api_port = 8001
+
 server_debug = True
 
 db = 'sqlite:///db.sqlite'
 sql_debug = False
 token_length = 16
 secret_length = 16
+
+server_token = 'ASDFGHJKL1029384'
 
 semester_end = [
     datetime.date(2015, 2, 15),
