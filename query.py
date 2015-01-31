@@ -15,6 +15,38 @@ class Query:
             }
         }
 
+    @property
+    def token(self):
+        return self.query['auth']['token']
+
+    @token.setter
+    def token(self, value):
+        self.query['auth']['token'] = value
+
+    @property
+    def time(self):
+        return self.query['auth']['time']
+
+    @time.setter
+    def time(self, value):
+        self.query['auth']['time'] = value
+
+    @property
+    def method(self):
+        return self.query['cmd']['method']
+
+    @method.setter
+    def method(self, value):
+        self.query['cmd']['method'] = value
+
+    @property
+    def params(self):
+        return self.query['cmd']['params']
+
+    @params.setter
+    def params(self, value):
+        self.query['cmd']['params'] = value
+
     def create_register(self, auth_token):
         self.query['auth']['token'] = auth_token
         self.query['cmd']['method'] = 'REGISTER'
@@ -48,4 +80,4 @@ class Query:
 
     def to_command(self):
         self.update_timestamp()
-        return json.dumps(self.query) + '\n'
+        return (json.dumps(self.query) + '\n').encode('utf-8')

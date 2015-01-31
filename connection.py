@@ -52,7 +52,7 @@ class Connection(Thread):
                 if len(e.args[0]) == 0:
                     self.running = False
                 else:
-                    pass
+                    raise e
                     # got a message do something :)
         return
 
@@ -62,18 +62,23 @@ class Connection(Thread):
 
     def update(self):
         try:
-            job = self.queries.get(block=False)
+            query = self.queries.get(block=False)
+            self.connection.sendall(query.to_command())
         except queue.Empty:
             pass
+        except Exception as e:
+            print(e)
 
-    @helpers.handle_dbsession()
-    def update_queues(session, self, data):
+    def update_queues(self, data):
         try:
             cmd = Query()
             if cmd.create_valid_query_from_string(data):
                 try:
-                    print(cmd)
-                    self.parent.queries.put(cmd, block=False)
+                    if cmd.method == 'REGISTER':
+                        self.parent.devices[cmd.token] = self
+                        print('registered new device with token %s' % cmd.token)
+                    else:
+                        self.parent.queries.put(cmd, block=False)
                 except queue.Empty:
                     pass
                 except Exception as e:
