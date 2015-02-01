@@ -1,0 +1,1 @@
+unregistering devices (also when deleting a device!)

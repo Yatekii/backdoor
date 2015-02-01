@@ -12,6 +12,7 @@ class ConnectionManager(Thread):
         self.max_threads = 6
         self.connections = []
         self.devices = {}
+        self.webuis = {}
         self.queries = Queue()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind((host, port))

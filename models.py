@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Date, ForeignKey
+from sqlalchemy import Column, Integer, String, Date, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy import Table
 
@@ -17,6 +17,7 @@ class Token(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String)
     value = Column(String)
+    flashed = Column(Boolean)
     creation_date = Column(Date)
     expiry_date = Column(Date)
     owner_id = Column(Integer, ForeignKey('users.id'))

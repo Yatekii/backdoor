@@ -51,6 +51,11 @@ class Query:
         self.query['auth']['token'] = auth_token
         self.query['cmd']['method'] = 'REGISTER'
 
+    def create_register_webui(self, auth_token, token):
+        self.query['auth']['token'] = auth_token
+        self.query['cmd']['method'] = 'REGISTER WEBUI'
+        self.query['cmd']['params'] = [token]
+
     def create_open(self, auth_token):
         self.query['auth']['token'] = auth_token
         self.query['cmd']['method'] = 'OPEN'
@@ -63,6 +68,23 @@ class Query:
     def create_grant(self, auth_token, token):
         self.query['auth']['token'] = auth_token
         self.query['cmd']['method'] = 'GRANT'
+        self.query['cmd']['params'] = [token]
+
+    def create_deny(self, auth_token, token):
+        self.query['auth']['token'] = auth_token
+        self.query['cmd']['method'] = 'DENY'
+        self.query['cmd']['params'] = [token]
+
+    def create_flash(self, auth_token, token, device_token=None):
+        self.query['auth']['token'] = auth_token
+        self.query['cmd']['method'] = 'FLASH'
+        self.query['cmd']['params'] = [token]
+        if device_token:
+            self.query['cmd']['params'] += device_token
+
+    def create_flashed(self, auth_token, token):
+        self.query['auth']['token'] = auth_token
+        self.query['cmd']['method'] = 'FLASHED'
         self.query['cmd']['params'] = [token]
 
     def create_valid_query_from_string(self, data):

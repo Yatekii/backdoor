@@ -14,6 +14,7 @@ token_length = 16
 secret_length = 16
 
 server_token = 'ASDFGHJKL1029384'
+webui_token = '1029384ASDFGHJKL'
 
 semester_end = [
     datetime.date(2015, 2, 15),

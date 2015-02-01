@@ -7,6 +7,7 @@ import queue
 from models import Token, Device
 from query import Query
 import helpers
+import config
 
 
 class Connection(Thread):
@@ -69,14 +70,27 @@ class Connection(Thread):
         except Exception as e:
             print(e)
 
-    def update_queues(self, data):
+    @helpers.handle_dbsession()
+    def update_queues(session, self, data):
         try:
             cmd = Query()
             if cmd.create_valid_query_from_string(data):
                 try:
+                    token = session.query(Device).filter_by(pubkey=cmd.token)
                     if cmd.method == 'REGISTER':
-                        self.parent.devices[cmd.token] = self
-                        print('registered new device with token %s' % cmd.token)
+                        if token:
+                            self.parent.devices[cmd.token] = self
+                            print('registered new device with token %s' % cmd.token)
+                        else:
+                            print('unknown token %s tried to register and was rejected' % cmd.token)
+
+                    elif cmd.method == 'REGISTER_WEBUI':
+                        if cmd.token == config.webui_token:
+                            self.parent.webuis[cmd.params[0]] = self
+                            print('registered new webui with token %s' % cmd.params[0])
+                        else:
+                            print('unknown token %s tried to register as webui and was rejected' % cmd.token)
+
                     else:
                         self.parent.queries.put(cmd, block=False)
                 except queue.Empty:

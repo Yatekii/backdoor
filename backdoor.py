@@ -4,6 +4,7 @@ import signal
 from connection_manager import ConnectionManager
 import config
 from query import Query
+from models import Token, Device
 import helpers
 
 
@@ -28,7 +29,10 @@ class Backdoor:
         try:
             query = self.connection_manager.queries.get(block=False)
             print('got query: ', query.query)
-            self.handle_query(query)
+            if query.token in self.connection_manager.devices + self.connection_manager.webuis:
+                self.handle_query(query)
+            else:
+                print('Request from non registered device. Discarded it.')
         except queue.Empty:
             pass
 
@@ -36,19 +40,44 @@ class Backdoor:
         device = device if type(device) == str else device.pubkey
         if device in self.connection_manager.devices:
             self.connection_manager.devices[device].queries.put(query)
+        elif device in self.connection_manager.webuis:
+            self.connection_manager.webuis[device].queries.put(query)
         else:
-            print('Device with token %s is not registered.' % device)
+            print('Device or webui with token %s is not registered. Request was discarded.' % device)
 
     def open(self, device):
         query = Query()
         query.create_open(config.server_token)
         self.issue_query(device, query)
 
-    def handle_query(self, query):
+    @helpers.handle_dbsession()
+    def handle_query(session, self, query):
+        response = Query()
         if query.method == 'ACCESS':
-            grant = Query()
-            grant.create_grant(config.server_token, query.params[0])
-            self.issue_query(query.token, grant)
+            token = session.query(Token).filter_by(value=query.params[0]).first()
+            device = session.query(Device).filter_by(pubkey_device=query.token).first()
+            if token in device.tokens and token.expiry_date >= helpers.today():
+                response.create_grant(config.server_token, query.params[0])
+
+            else:
+                response.create_deny(config.server_token, query.params[0])
+
+            self.issue_query(query.token, response)
+
+        elif query.method == 'FLASH':
+            if query.token in self.connection_manager.webuis:
+                if len(query.params) == 2:
+                    response.create_flash(config.server_token, query.params[0])
+                    self.issue_query(query.params[1], response)
+                else:
+                    print('Invalid flash request. Request has been discarded.')
+            else:
+                print('Request came from an unregistered webui. It is discarded.')
+
+        elif query.method == 'FLASHED':
+                session.query(Token).filter_by(query.params[0]).first().flashed = True
+                print('Token has been flashed.')
+
 
 bd = Backdoor()
 bd.run()
