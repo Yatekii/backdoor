@@ -80,7 +80,7 @@ class Query:
         self.query['cmd']['method'] = 'FLASH'
         self.query['cmd']['params'] = [token]
         if device_token:
-            self.query['cmd']['params'] += device_token
+            self.query['cmd']['params'] += [device_token]
 
     def create_flashed(self, auth_token, token):
         self.query['auth']['token'] = auth_token
@@ -102,4 +102,4 @@ class Query:
 
     def to_command(self):
         self.update_timestamp()
-        return (json.dumps(self.query) + '\n').encode('utf-8')
+        return (json.dumps(self.query) + '\r\n').encode('utf-8')

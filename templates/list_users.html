@@ -73,7 +73,7 @@
                 </td>
                 <td>{{ user.creation_date }}</td>
                 <td>
-                    <form action="{{ url_for('remove_user') }}" method=post>
+                    <form class="remove_form" action="{{ url_for('remove_user') }}" method=post>
                         <input type="submit" class="form-control btn-danger" value="Remove" />
                         <input name="user_id" class="form-control invisible" title="User id" value="{{ user.id }}" />
                     </form>
@@ -99,6 +99,9 @@
         </tbody>
     </table>
     <script type="text/javascript">
+
+        remove_init();
+
         init_edit_field('.button_change_user_level');
         init_edit_field('.button_change_user_email');
         init_edit_field('.button_change_user_nethzid');

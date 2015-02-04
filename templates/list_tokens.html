@@ -7,9 +7,10 @@
         <thead>
         <tr>
             <td class="col-lg-1">ID</td>
-            <td class="col-lg-3">Owner</td>
+            <td class="col-lg-2">Owner</td>
             <td class="col-lg-3">Expiry Date</td>
             <td class="col-lg-3">Creation Date</td>
+            <td class="col-lg-1">Flashed?</td>
             <td class="col-lg-1">Remove?</td>
             <td class="col-lg-1">Revoke?</td>
         </tr>
@@ -34,6 +35,19 @@
                     </form>
                 </td>
                 <td>{{ token.creation_date }}</td>
+                <td>
+                    {% if not token.flashed %}
+                        <form class="flash_form" action="{{ url_for('flash_token') }}" method=post>
+                            <input type="submit" class="btn btn-default btn-warning" value="Flash" />
+                            <input name="token_id" class="invisible" value="{{ token.id }}" title="Token id"/>
+                        </form>
+                    {% else %}
+                        <form class="flashed_form" action="" method=post>
+                            <input type="submit" class="btn btn-default btn-success" value="Flashed" disabled />
+                            <input name="token_id" class="invisible" value="{{ token.id }}" title="Token id"/>
+                        </form>
+                    {% endif %}
+                </td>
                 <td>
                     <form class="remove_form" action="{{ url_for('remove_token') }}" method=post>
                         <input type="submit" class="btn btn-default btn-danger" value="Remove" />
@@ -92,6 +106,10 @@
     <script type="text/javascript">
 
         init_edit_field('.button_change_token_expiry_date');
+
+        remove_init();
+
+        flashed_init();
 
         user_typeahead();
         device_typeahead();

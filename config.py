@@ -4,7 +4,9 @@ webui_host = '127.0.0.1'
 webui_port = 8001
 
 api_host = '127.0.0.1'
-api_port = 8002
+api_port = 8003
+
+flash_device = 1
 
 server_debug = True
 

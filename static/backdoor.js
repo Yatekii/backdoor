@@ -1,5 +1,5 @@
 function findMatchesUsers(q, cb) {
-    $.ajax('https://backdoor.yatekii.ch/json/users', {q: q}).done(function (json) {
+    $.ajax('https://backdoor.yatekii.ch/to_json/users', {q: q}).done(function (json) {
         var substrRegex = new RegExp(q, 'i');
         var matches = [];
         $.each($.parseJSON(json).users, function (i, entry) {
@@ -12,7 +12,7 @@ function findMatchesUsers(q, cb) {
 }
 
 function findMatchesDevices(q, cb) {
-    $.ajax('https://backdoor.yatekii.ch/json/devices', {q: q}).done(function (json) {
+    $.ajax('https://backdoor.yatekii.ch/to_json/devices', {q: q}).done(function (json) {
         var substrRegex = new RegExp(q, 'i');
         var matches = [];
         $.each($.parseJSON(json).devices, function (i, entry) {
@@ -78,7 +78,7 @@ function device_typeahead() {
     });
 }
 
-function remove_token_init(){
+function remove_init(){
     $.each($(".remove_form"), function (i, entry){
         $(entry).submit(function () {
             var button = $(entry).find("input[type='submit']");
@@ -90,14 +90,34 @@ function remove_token_init(){
     });
 }
 
-function init_edit_field(name){
-    $('form').on('click', name, function(event){
+function init_edit_field(name) {
+    $('form').on('click', name, function (event) {
         var icon = $(this).find('.glyphicon-pencil');
-        if(icon.hasClass('glyphicon-pencil')) {
+        if (icon.hasClass('glyphicon-pencil')) {
             event.preventDefault();
-                icon.removeClass('glyphicon-pencil')
-                    .addClass('glyphicon-ok');
+            icon.removeClass('glyphicon-pencil')
+                .addClass('glyphicon-ok');
             $(this).parent().siblings().prop("readonly", false);
         }
+    });
+}
+
+function check_flashed_status(entry, id) {
+    $.ajax({
+        type: 'POST',
+        url: 'https://backdoor.yatekii.ch/token_flashed',
+        data: {token_id: id}
+    }).done(function (data) {
+        if (data == 'True') {
+            alert("got flashed");
+        }
+    });
+}
+
+function flashed_init() {
+    $.each($(".flash_form"), function (i, entry) {
+        setInterval(function () {
+            check_flashed_status(entry, $(entry).find("input[name='token_id']"));
+        }, 2000)
     });
 }

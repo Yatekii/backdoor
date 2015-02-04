@@ -19,6 +19,8 @@ class Connection(Thread):
         self.connection, self.address = incomming_connection
         self.connection.settimeout(2.0)
         self.queries = Queue()
+        self.other = None
+        self.type = None
         print('Connected by', self.address)
 
     def run(self):
@@ -29,6 +31,10 @@ class Connection(Thread):
                 self.data += data
                 if len(data) == 0:
                     print('Connection lost; shutting down process.')
+                    if self.other in self.parent.webuis:
+                        del self.parent.webuis[self.other]
+                    elif self.other in self.parent.devices:
+                        del self.parent.devices[self.other]
                     self.connection.close()
                     return
 
@@ -80,13 +86,17 @@ class Connection(Thread):
                     if cmd.method == 'REGISTER':
                         if token:
                             self.parent.devices[cmd.token] = self
+                            self.other = cmd.token
+                            self.type = 'device'
                             print('registered new device with token %s' % cmd.token)
                         else:
                             print('unknown token %s tried to register and was rejected' % cmd.token)
 
-                    elif cmd.method == 'REGISTER_WEBUI':
+                    elif cmd.method == 'REGISTER WEBUI':
                         if cmd.token == config.webui_token:
                             self.parent.webuis[cmd.params[0]] = self
+                            self.other = cmd.token
+                            self.type = 'webui'
                             print('registered new webui with token %s' % cmd.params[0])
                         else:
                             print('unknown token %s tried to register as webui and was rejected' % cmd.token)

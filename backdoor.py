@@ -29,7 +29,7 @@ class Backdoor:
         try:
             query = self.connection_manager.queries.get(block=False)
             print('got query: ', query.query)
-            if query.token in self.connection_manager.devices + self.connection_manager.webuis:
+            if query.token in self.connection_manager.devices or query.token in self.connection_manager.webuis:
                 self.handle_query(query)
             else:
                 print('Request from non registered device. Discarded it.')
@@ -53,6 +53,7 @@ class Backdoor:
     @helpers.handle_dbsession()
     def handle_query(session, self, query):
         response = Query()
+        print(query.query)
         if query.method == 'ACCESS':
             token = session.query(Token).filter_by(value=query.params[0]).first()
             device = session.query(Device).filter_by(pubkey_device=query.token).first()
@@ -75,7 +76,7 @@ class Backdoor:
                 print('Request came from an unregistered webui. It is discarded.')
 
         elif query.method == 'FLASHED':
-                session.query(Token).filter_by(query.params[0]).first().flashed = True
+                session.query(Token).filter_by(value=query.params[0]).first().flashed = True
                 print('Token has been flashed.')
 
 
