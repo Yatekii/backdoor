@@ -1,5 +1,5 @@
 import socket
-import json
+import logging
 from threading import Thread
 from queue import Queue
 import queue
@@ -21,7 +21,8 @@ class Connection(Thread):
         self.queries = Queue()
         self.other = None
         self.type = None
-        print('Connected by', self.address)
+        self.logger = logging.getLogger('backdoor')
+        self.logger.info('Connected with %s, %d' % (self.address[0], self.address[1]))
 
     def run(self):
         while self.running:
@@ -29,8 +30,9 @@ class Connection(Thread):
                 self.update()
                 data = self.connection.recv(1024)
                 self.data += data
+
                 if len(data) == 0:
-                    print('Connection lost; shutting down process.')
+                    self.logger.info('Connection to %s, %d lost. Shutting down connection thread.' % (self.address[0], self.address[1]))
                     if self.other in self.parent.webuis:
                         del self.parent.webuis[self.other]
                     elif self.other in self.parent.devices:
@@ -44,26 +46,27 @@ class Connection(Thread):
                     self.update_queues(data)
 
             except socket.timeout as e:
-                # this next if/else is a bit redundant, but illustrates how the
-                # timeout exception is setup
                 if e.args[0] == 'timed out':
                     continue
                 else:
-                    print(e)
+                    self.logger.exception('Shutting down connection thread (%s, %d) due to caught exception:' % (self.address[0], self.address[1]))
+                    self.logger.exception(e)
                     self.running = False
+
             except socket.error as e:
-                # Something else happened, handle error, exit, etc.
-                print(e)
+                self.logger.exception('Shutting down connection thread (%s, %d) due to caught exception:' % (self.address[0], self.address[1]))
+                self.logger.exception(e)
                 self.running = False
+
             except Exception as e:
                 if len(e.args[0]) == 0:
+                    self.logger.exception('Shutting down connection thread (%s, %d) due to caught exception:' % (self.address[0], self.address[1]))
+                    self.logger.exception(e)
                     self.running = False
-                else:
-                    raise e
-                    # got a message do something :)
         return
 
     def stop(self):
+        self.logger.info('Regular shutdown of connection thread (%s, %d).' % (self.address[0], self.address[1]))
         self.connection.close()
         self.running = False
 
@@ -74,7 +77,9 @@ class Connection(Thread):
         except queue.Empty:
             pass
         except Exception as e:
-            print(e)
+            self.logger.exception('Caught exception in thread (%s, %d) whilst trying to send query:' % (self.address[0], self.address[1]))
+            self.logger.exception(query.query)
+            self.logger.exception(e)
 
     @helpers.handle_dbsession()
     def update_queues(session, self, data):
@@ -88,28 +93,30 @@ class Connection(Thread):
                             self.parent.devices[cmd.token] = self
                             self.other = cmd.token
                             self.type = 'device'
-                            print('registered new device with token %s' % cmd.token)
+                            self.logger.info('Registered new device with token %s.' % cmd.token)
                         else:
-                            print('unknown token %s tried to register and was rejected' % cmd.token)
+                            self.logger.info('Unknown token %s tried to register and was rejected.' % cmd.token)
 
                     elif cmd.method == 'REGISTER WEBUI':
                         if cmd.token == config.webui_token:
                             self.parent.webuis[cmd.params[0]] = self
                             self.other = cmd.token
                             self.type = 'webui'
-                            print('registered new webui with token %s' % cmd.params[0])
+                            self.logger.info('Registered new webui with token %s.' % cmd.params[0])
                         else:
-                            print('unknown token %s tried to register as webui and was rejected' % cmd.token)
+                            self.logger.info('Unknown token %s tried to register as webui and was rejected.' % cmd.token)
 
                     else:
                         self.parent.queries.put(cmd, block=False)
                 except queue.Empty:
                     pass
                 except Exception as e:
-                    print(e)
+                    self.logger.exception('Caught exception whilst processing command:')
+                    self.logger.exception(cmd.query)
+                    self.logger.exception(e)
             else:
-                print('command discarded 1')
+                self.logger.info('Discarded command:')
+                self.logger.info(data)
         except:
-            print('command discarded 2')
-            # discard command
-            pass
+            self.logger.info('Discarded command:')
+            self.logger.info(data)

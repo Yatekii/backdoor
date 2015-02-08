@@ -1,9 +1,11 @@
 import json
 import datetime
+import logging
 
 
 class Query:
     def __init__(self, token=None, method=None, params=None):
+        self.logger = logging.getLogger('backdoor')
         self.query = {
             'auth': {
                 'token': token,
@@ -88,13 +90,12 @@ class Query:
         self.query['cmd']['params'] = [token]
 
     def create_valid_query_from_string(self, data):
-        print(data)
         try:
             self.query = json.loads(data)
             return True
         except Exception as e:
-            print(e)
-            print('Query failed to parse')
+            self.logger.debug('Query failed to parse.')
+            self.logger.debug(e)
             return False
 
     def update_timestamp(self):
