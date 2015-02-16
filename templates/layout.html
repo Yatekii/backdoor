@@ -37,10 +37,13 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="#">Dashboard</a></li>
                 <li><a href="#">Settings</a></li>
-                <li><a href="#">Profile</a></li>
-                <li><a href="#">Help</a></li>
+                <li {% if active == 'overview' %} class="active" {% endif %}><a href="{{ url_for('overview') }}">Overview</a></li>
+                <li {% if active == 'users' %} class="active" {% endif %}><a href="{{ url_for('users') }}">Users</a></li>
+                <li {% if active == 'tokens' %} class="active" {% endif %}><a href="{{ url_for('tokens') }}">Tokens</a></li>
+                <li {% if active == 'devices' %} class="active" {% endif %}><a href="{{ url_for('devices') }}">Devices</a></li>
+                <li {% if active == 'sounds' %} class="active" {% endif %}><a href="{{ url_for('sounds') }}">Sounds</a></li>
+                <li {% if active == 'logs' %} class="active" {% endif %}><a href="{{ url_for('logs') }}">Logs</a></li>
             </ul>
             <form class="navbar-form navbar-right">
                 <input class="form-control" placeholder="Search..." type="text">
@@ -53,17 +56,12 @@
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-lg-1 sidebar">
+        <div class="col-xs-2 sidebar">
             <ul class="nav nav-sidebar">
-                <li {% if active == 'overview' %} class="active" {% endif %}><a href="{{ url_for('overview') }}">Overview</a></li>
-                <li {% if active == 'list_users' %} class="active" {% endif %}><a href="{{ url_for('list_users') }}">Users</a></li>
-                <li {% if active == 'list_tokens' %} class="active" {% endif %}><a href="{{ url_for('list_tokens') }}">Tokens</a></li>
-                <li {% if active == 'list_devices' %} class="active" {% endif %}><a href="{{ url_for('list_devices') }}">Devices</a></li>
-                <li {% if active == 'list_sounds' %} class="active" {% endif %}><a href="{{ url_for('list_sounds') }}">Sounds</a></li>
-                <li {% if active == 'logs' %} class="active" {% endif %}><a href="{{ url_for('logs') }}">Logs</a></li>
+                {% block navi %}{% endblock %}
             </ul>
         </div>
-        <div class="col-lg-11 main">
+        <div class="col-xs-5 main">
             {% for category, message in get_flashed_messages(with_categories=true) %}
                 <div class="alert alert-{{ category }} col-lg-12" role="alert"><strong>{{ message }}</strong></div>
             {% endfor %}

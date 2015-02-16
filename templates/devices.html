@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+
+{% block navi %}
+    {% include "list_devices.html" %}
+{% endblock %}
+
+{% block body %}
+    {% if id == 0 %}
+        {% include "add_device.html" %}
+    {% else %}
+        {% include "edit_device.html" %}
+    {% endif %}
+{% endblock %}

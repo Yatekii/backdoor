@@ -109,15 +109,16 @@ function check_flashed_status(entry, id) {
         data: {token_id: id}
     }).done(function (data) {
         if (data == 'True') {
-            alert("got flashed");
+            alert('Token was successfully flashed!')
+            location.reload();
         }
-    });
+    })
 }
 
 function flashed_init() {
     $.each($(".flash_form"), function (i, entry) {
         setInterval(function () {
-            check_flashed_status(entry, $(entry).find("input[name='token_id']"));
-        }, 2000)
+            check_flashed_status(entry, $(entry).find("input[name='token_id']").val());
+        }, 5000)
     });
 }

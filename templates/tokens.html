@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+
+{% block navi %}
+    {% include "list_tokens.html" %}
+{% endblock %}
+
+{% block body %}
+    {% if id == 0 %}
+        {% include "add_token.html" %}
+    {% else %}
+        {% include "edit_token.html" %}
+    {% endif %}
+{% endblock %}

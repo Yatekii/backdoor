@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+
+{% block navi %}
+    {% include "list_users.html" %}
+{% endblock %}
+
+{% block body %}
+    {% if id == 0 %}
+        {% include "add_user.html" %}
+    {% else %}
+        {% include "edit_user.html" %}
+    {% endif %}
+{% endblock %}
