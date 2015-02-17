@@ -1,4 +1,12 @@
-<li {% if id == 0 %} class="active" {% endif %}><a href="{{ url_for('users', id=0) }}">Add User</a></li>
-{% for user in users %}
-    <li {% if id == user.id %} class="active" {% endif %}><a href="{{ url_for('users', id=user.id) }}">{{ user.name }}</a></li>
-{% endfor %}
+{% if active != 'search' %}
+    <li {% if id == 0 %} class="active" {% endif %}><a href="{{ url_for('users', id=0) }}">Add User</a></li>
+    {% for user in users %}
+        <li {% if id == user.id %} class="active" {% endif %}><a href="{{ url_for('users', id=user.id) }}">{{ user.name }}</a></li>
+    {% endfor %}
+{% else %}
+    <li style="background-color: #EEEEEE;"><a style="color: #333333;" href="{{ url_for('users') }}">Users</a></li>
+    {% for user in users %}
+        <li {% if (not type or type == 'user') and id == user.id%} class="active" {% endif %}><a href="{{ url_for('search', q=q, type='user', id=user.id) }}">{{ user.name }}</a></li>
+    {% endfor %}
+{% endif %}
+

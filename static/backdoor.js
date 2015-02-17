@@ -78,6 +78,48 @@ function device_typeahead() {
     });
 }
 
+function search_typeahead() {
+    $.each($('.search_typeahead'), function (i, entry){
+        var input = $(entry);
+
+        input.typeahead({
+                minLength: 1,
+                highlight: true,
+                hint: false
+            },
+            {
+                name: 'users',
+                source: findMatchesUsers,
+                displayKey: 'name',
+                templates: {
+                    header: '<h3 class="search_name_title">Users</h3>'
+                }
+            },
+            {
+                name: 'devices',
+                source: findMatchesDevices,
+                displayKey: 'name',
+                templates: {
+                    header: '<h3 class="search_name_title">Devices</h3>'
+                }
+            }
+        );
+
+        input.bind('typeahead:selected', function (obj, datum, name) {
+            if(name == 'users') {
+                window.location.href='https://backdoor.yatekii.ch/users/' + datum.id;
+            }
+            else if(name == 'devices'){
+                window.location.href='https://backdoor.yatekii.ch/devices/' + datum.id;
+            }
+        });
+
+        input.bind('typeahead:opened', function (obj, datum, name) {
+
+        });
+    });
+}
+
 function remove_init(){
     $.each($(".remove_form"), function (i, entry){
         $(entry).submit(function () {

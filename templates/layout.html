@@ -36,18 +36,18 @@
 	    <a class="navbar-brand" href="{{ url_for('home') }}">Backdoor</a>
         </div>
         <div id="navbar" class="navbar-collapse collapse">
+            <form method="GET" action="{{ url_for('search') }}" class="navbar-form navbar-right">
+                <input class="form-control search_typeahead" placeholder="Search..." type="text" name="q">
+            </form>
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="#">Settings</a></li>
-                <li {% if active == 'overview' %} class="active" {% endif %}><a href="{{ url_for('overview') }}">Overview</a></li>
+                <li {% if active == 'overview' %} class="active" {% endif %}><a href="#">Overview</a></li>
                 <li {% if active == 'users' %} class="active" {% endif %}><a href="{{ url_for('users') }}">Users</a></li>
                 <li {% if active == 'tokens' %} class="active" {% endif %}><a href="{{ url_for('tokens') }}">Tokens</a></li>
                 <li {% if active == 'devices' %} class="active" {% endif %}><a href="{{ url_for('devices') }}">Devices</a></li>
-                <li {% if active == 'sounds' %} class="active" {% endif %}><a href="{{ url_for('sounds') }}">Sounds</a></li>
-                <li {% if active == 'logs' %} class="active" {% endif %}><a href="{{ url_for('logs') }}">Logs</a></li>
+                <li {% if active == 'sounds' %} class="active" {% endif %}><a href="#">Sounds</a></li>
+                <li {% if active == 'logs' %} class="active" {% endif %}><a href="#">Logs</a></li>
             </ul>
-            <form class="navbar-form navbar-right">
-                <input class="form-control" placeholder="Search..." type="text">
-            </form>
         </div>
     </div>
 </nav>
@@ -75,6 +75,10 @@
     <footer>
         <p>© Bastli™ 2015</p>
     </footer>
+
+    <script type="text/javascript">
+        search_typeahead();
+    </script>
 
 </div>
 <!-- Bootstrap core JavaScript
