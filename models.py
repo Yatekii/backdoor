@@ -21,7 +21,7 @@ class Token(Base):
     description = Column(String)
     flashed = Column(Boolean)
     expiry_date = Column(Date)
-    owner_id = Column(Integer, ForeignKey('users.id'))
+    owner_id = Column(Integer, ForeignKey('users.id', ondelete='cascade'))
 
 
 class User(Base):
@@ -36,7 +36,7 @@ class User(Base):
     email = Column(String)
     nethzid = Column(String)
     welcome_sound = Column(String)
-    tokens = relationship('Token', lazy='dynamic', backref='owner')
+    tokens = relationship('Token', lazy='dynamic', backref='owner', cascade='all, delete-orphan')
 
 
 class Device(Base):
