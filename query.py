@@ -89,6 +89,14 @@ class Query:
         self.query['cmd']['method'] = 'FLASHED'
         self.query['cmd']['params'] = [token]
 
+    def create_ping(self, auth_token):
+        self.query['auth']['token'] = auth_token
+        self.query['cmd']['method'] = 'PING'
+
+    def create_pong(self, auth_token):
+        self.query['auth']['token'] = auth_token
+        self.query['cmd']['method'] = 'PONG'
+
     def create_valid_query_from_string(self, data):
         try:
             self.query = json.loads(data)

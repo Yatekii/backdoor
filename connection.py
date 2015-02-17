@@ -3,6 +3,7 @@ import logging
 from threading import Thread
 from queue import Queue
 import queue
+import time
 
 from models import Token, Device
 from query import Query
@@ -23,22 +24,29 @@ class Connection(Thread):
         self.type = None
         self.logger = logging.getLogger('backdoor')
         self.logger.info('Connected with %s, %d' % (self.address[0], self.address[1]))
+        self.last_ping = time.time()
+        self.pinged = False
 
     def run(self):
         while self.running:
+            if time.time() - self.last_ping > config.ping_interval + config.pong_interval:
+                self.logger.info('Got no PING from %s in time. Closing connection' % self.other)
+                return self.shutdown()
+
+            elif time.time() - self.last_ping > config.ping_interval and not self.pinged:
+                query = Query()
+                query.create_ping(config.server_token)
+                self.connection.sendall(query.to_command())
+                self.pinged = True
+                self.logger.info('Sent PING to %s.' % self.other)
+
             try:
                 self.update()
                 data = self.connection.recv(1024)
                 self.data += data
 
                 if len(data) == 0:
-                    self.logger.info('Connection to %s, %d lost. Shutting down connection thread.' % (self.address[0], self.address[1]))
-                    if self.other in self.parent.webuis:
-                        del self.parent.webuis[self.other]
-                    elif self.other in self.parent.devices:
-                        del self.parent.devices[self.other]
-                    self.connection.close()
-                    return
+                    return self.shutdown()
 
                 data_stack = self.data.split(b'\r\n')
                 self.data = data_stack.pop()
@@ -69,6 +77,14 @@ class Connection(Thread):
         self.logger.info('Regular shutdown of connection thread (%s, %d).' % (self.address[0], self.address[1]))
         self.connection.close()
         self.running = False
+
+    def shutdown(self):
+        self.logger.info('Connection to %s, %d lost. Shutting down connection thread.' % (self.address[0], self.address[1]))
+        if self.other in self.parent.webuis:
+            del self.parent.webuis[self.other]
+        elif self.other in self.parent.devices:
+            del self.parent.devices[self.other]
+        self.connection.close()
 
     def update(self):
         try:
@@ -105,6 +121,12 @@ class Connection(Thread):
                             self.logger.info('Registered new webui with token %s.' % cmd.params[0])
                         else:
                             self.logger.info('Unknown token %s tried to register as webui and was rejected.' % cmd.token)
+
+                    elif cmd.method == 'PONG':
+                        if self.pinged and config.ping_interval + config.pong_interval > self.last_ping - time.time():
+                            self.last_ping = time.time()
+                            self.pinged = False
+                            self.logger.info('Got PONG from %s.' % cmd.token)
 
                     else:
                         self.parent.queries.put(cmd, block=False)

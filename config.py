@@ -26,3 +26,6 @@ semester_end = [
 ]
 
 shared_secret = 'VERYSECUREPASSPHRASE'
+
+ping_interval = 30
+pong_interval = 30
