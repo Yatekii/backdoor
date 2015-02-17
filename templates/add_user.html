@@ -2,6 +2,18 @@
     <h4>New User</h4>
     <table class="table table-hover table_general">
         <tr>
+            <td>Username</td>
+            <td>
+                <input type="text" name="add_user_username" class="form-control" value="{{ previous['user_username'] }}" />
+            </td>
+        </tr>
+        <tr>
+            <td>Password</td>
+            <td>
+                <input type="password" name="add_user_password" class="form-control" value="{{ previous['user_password'] }}" />
+            </td>
+        </tr>
+        <tr>
             <td>Name</td>
             <td>
                 <input type="text" name="add_user_name" class="form-control" value="{{ previous['user_name'] }}" />

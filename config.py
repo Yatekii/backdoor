@@ -26,6 +26,7 @@ semester_end = [
 ]
 
 shared_secret = 'VERYSECUREPASSPHRASE'
+webui_sessions_secret = 'adsjkfhasdjkfhjkasdhfkasdjhfkloajshdfjskdf'
 
 ping_interval = 30
 pong_interval = 30

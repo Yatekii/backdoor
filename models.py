@@ -15,10 +15,11 @@ class Token(Base):
     __tablename__ = 'tokens'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    creation_date = Column(Date)
     name = Column(String)
     value = Column(String)
+    description = Column(String)
     flashed = Column(Boolean)
-    creation_date = Column(Date)
     expiry_date = Column(Date)
     owner_id = Column(Integer, ForeignKey('users.id'))
 
@@ -28,8 +29,10 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     creation_date = Column(Date)
-    name = Column(String)
+    username = Column(String)
+    password = Column(String)
     level = Column(Integer)
+    name = Column(String)
     email = Column(String)
     nethzid = Column(String)
     welcome_sound = Column(String)
@@ -42,5 +45,6 @@ class Device(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     creation_date = Column(Date)
     name = Column(String)
+    description = Column(String)
     pubkey = Column(String)
     tokens = relationship('Token', secondary=token_device_table, backref='devices')
