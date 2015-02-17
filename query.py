@@ -58,6 +58,10 @@ class Query:
         self.query['cmd']['method'] = 'REGISTER WEBUI'
         self.query['cmd']['params'] = [token]
 
+    def create_unregister(self, auth_token):
+        self.query['auth']['token'] = auth_token
+        self.query['cmd']['method'] = 'UNREGISTER'
+
     def create_open(self, auth_token):
         self.query['auth']['token'] = auth_token
         self.query['cmd']['method'] = 'OPEN'

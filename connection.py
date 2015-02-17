@@ -27,6 +27,22 @@ class Connection(Thread):
         self.last_ping = time.time()
         self.pinged = False
 
+    def shutdown(self):
+        self.logger.info('Shutting down connection thread.')
+        self.running = False
+        if self.other in self.parent.webuis:
+            del self.parent.webuis[self.other]
+        elif self.other in self.parent.devices:
+            del self.parent.devices[self.other]
+        try:
+            self.connection.close()
+        except OSError as e:
+            if e.args[0] == 9:
+                pass
+            else:
+                raise e
+        self.logger.info('Successfully shut down connection thread.')
+
     def run(self):
         while self.running:
             if time.time() - self.last_ping > config.ping_interval + config.pong_interval:
@@ -59,32 +75,30 @@ class Connection(Thread):
                 else:
                     self.logger.exception('Shutting down connection thread (%s, %d) due to caught exception:' % (self.address[0], self.address[1]))
                     self.logger.exception(e)
-                    self.running = False
+                    return self.shutdown()
+
+            except OSError as e:
+                if e.args[0] == 9:
+                    self.logger.info('Connection lost.')
+                    return self.shutdown()
+                else:
+                    raise e
 
             except socket.error as e:
                 self.logger.exception('Shutting down connection thread (%s, %d) due to caught exception:' % (self.address[0], self.address[1]))
                 self.logger.exception(e)
-                self.running = False
+                return self.shutdown()
 
             except Exception as e:
                 if len(e.args[0]) == 0:
-                    self.logger.exception('Shutting down connection thread (%s, %d) due to caught exception:' % (self.address[0], self.address[1]))
+                    self.logger.exception('3Shutting down connection thread (%s, %d) due to caught exception:' % (self.address[0], self.address[1]))
                     self.logger.exception(e)
-                    self.running = False
+                    return self.shutdown()
         return
 
     def stop(self):
         self.logger.info('Regular shutdown of connection thread (%s, %d).' % (self.address[0], self.address[1]))
-        self.connection.close()
-        self.running = False
-
-    def shutdown(self):
-        self.logger.info('Connection to %s, %d lost. Shutting down connection thread.' % (self.address[0], self.address[1]))
-        if self.other in self.parent.webuis:
-            del self.parent.webuis[self.other]
-        elif self.other in self.parent.devices:
-            del self.parent.devices[self.other]
-        self.connection.close()
+        self.shutdown()
 
     def update(self):
         try:
@@ -103,9 +117,9 @@ class Connection(Thread):
             cmd = Query()
             if cmd.create_valid_query_from_string(data):
                 try:
-                    token = session.query(Device).filter_by(pubkey=cmd.token)
+                    device = session.query(Device).filter_by(pubkey=cmd.token)
                     if cmd.method == 'REGISTER':
-                        if token:
+                        if device:
                             self.parent.devices[cmd.token] = self
                             self.other = cmd.token
                             self.type = 'device'
@@ -121,6 +135,11 @@ class Connection(Thread):
                             self.logger.info('Registered new webui with token %s.' % cmd.params[0])
                         else:
                             self.logger.info('Unknown token %s tried to register as webui and was rejected.' % cmd.token)
+
+                    elif cmd.method == 'UNREGISTER':
+                        if cmd.token == self.other:
+                            self.logger.info('%s just unregistered. Shutting down.' % self.other)
+                            return self.shutdown()
 
                     elif cmd.method == 'PONG':
                         if self.pinged and config.ping_interval + config.pong_interval > self.last_ping - time.time():
