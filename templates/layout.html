@@ -41,7 +41,7 @@
             </form>
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="#">Settings</a></li>
-                <li {% if active == 'overview' %} class="active" {% endif %}><a href="#">Overview</a></li>
+                <li {% if active == 'profile' %} class="active" {% endif %}><a href="{{ url_for('profile') }}">Profile</a></li>
                 <li {% if active == 'users' %} class="active" {% endif %}><a href="{{ url_for('users') }}">Users</a></li>
                 <li {% if active == 'tokens' %} class="active" {% endif %}><a href="{{ url_for('tokens') }}">Tokens</a></li>
                 <li {% if active == 'devices' %} class="active" {% endif %}><a href="{{ url_for('devices') }}">Devices</a></li>
