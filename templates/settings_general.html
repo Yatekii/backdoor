@@ -1,0 +1,31 @@
+{% extends "settings.html" %}
+{% block body %}
+    <h4>General</h4>
+    <form class="change_general_settings" action="{{ url_for('change_general_settings') }}" method=post>
+        <table class="table table-hover table_general">
+            <tr>
+                <td>Flashing Device</td>
+                <td>
+                    <select name="change_flash_device" class="form-control">
+                        {% for device in devices %}
+                            <option value="{{ device.id }}" {% if flash_device == loop.index %}selected{% endif %}>{{ device.name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>Semester Start Dates</td>
+                <td>
+                    {% for date in semester_end_dates %}
+                        <input type="text" name="change_semester_end_date_{{ loop.index }}" class="form-control" title="" value="{{ date }}" />
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <input type="submit" name="change_general_settings" class="form-control btn-success" title="" value="Change" />
+                </td>
+            </tr>
+        </table>
+    </form>
+{% endblock %}

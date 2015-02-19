@@ -25,13 +25,14 @@ from query import Query
 app = Flask(__name__)
 app.static_folder = 'static'
 app.secret_key = config.webui_sessions_secret
+app.permanent_session_lifetime = datetime.timedelta(days=2048)
 
 
 def check_secret():
     def checker_helper(f):
         @functools.wraps(f)
         def inner(*args, **kwargs):
-            request.cookies.get('bastli_backdoor_shared_secret') == config.shared_secret
+            request.cookies.get('bastli_backdoor_shared_secret') == config.api_token
             if True:
                 return f(*args, **kwargs)
             else:
@@ -99,6 +100,7 @@ def login(sqlsession):
             session['failed_attempts'] = 0
         if user and user.level > 9000:
             session['username'] = user.username
+            session.permanent = True
             session.pop('failed_attempts', None)
             return redirect(url_for('profile'))
         flash('Wrong password, username or permission.', 'danger')
@@ -125,6 +127,70 @@ def profile(sqlsession):
     active = 'profile'
     user = sqlsession.query(models.User).filter_by(username=session['username']).first()
     return render_template('profile.html', active=active, user=user)
+
+
+# --------------------------------------------------    SETTINGS    -------------------------------------------------- #
+
+
+@app.route('/settings/', defaults={'category' : 'list'})
+@app.route('/settings/<category>', methods=['POST', 'GET'])
+@check_session()
+@helpers.handle_dbsession()
+def settings(sqlsession, category):
+    active = 'settings'
+
+    if category == 'readonly':
+        return render_template(
+            'settings_readonly.html',
+            active=active,
+            webui_token=config.webui_token,
+            server_token=config.server_token,
+            api_token=config.api_token
+        )
+    elif category == 'general':
+        devices = sqlsession.query(models.Device).all()
+        return render_template(
+            'settings_general.html',
+            active=active,
+            flash_device=config.config('flash_device'),
+            devices=devices,
+            semester_end_dates=config.config('semester_end_dates')
+        )
+    else:
+        devices = sqlsession.query(models.Device).all()
+        return render_template(
+            'settings_general.html',
+            active=active,
+            flash_device=config.config('flash_device'),
+            devices=devices,
+            semester_end_dates=config.config('semester_end_dates')
+        )
+
+
+@app.route('/change_general_settings', methods=['POST'])
+@check_session()
+@helpers.handle_dbsession()
+def change_general_settings(sqlsession):
+    error = False
+
+    config.store_config('flash_device', request.form['change_flash_device'])
+
+    dates = []
+    for key in request.form:
+        if 'change_semester_end_date_' in key:
+            try:
+                print(request.form[key])
+                dates.append(helpers.date_to_str(helpers.str_to_date(request.form[key])))
+            except BaseException:
+                error = True
+                flash('At least one date has a bad format. It should be YYYY-mm-dd!', 'danger')
+                break
+    if not error:
+        sorted_dates = sorted(dates, key=lambda date: helpers.str_to_date(date))
+        config.store_config('semester_end_dates', sorted_dates)
+
+    flash('New settings have successfully been stored.', 'success')
+    return redirect(url_for('settings'))
 
 
 # --------------------------------------------------     SEARCH     -------------------------------------------------- #
@@ -527,7 +593,7 @@ def activate_token(sqlsession):
     token = sqlsession.query(models.Token).filter_by(id=request.form['token_id']).first()
 
     if token:
-        for date in config.semester_end:
+        for date in helpers.str_to_date(config.config('semester_end_dates')):
             if date <= helpers.today():
                 continue
             token.expiry_date = date
@@ -631,7 +697,7 @@ def token_flashed(sqlsession):
 @helpers.handle_dbsession()
 def flash_token(sqlsession):
     token = sqlsession.query(models.Token).filter_by(id=request.form.get('token_id')).first()
-    device = sqlsession.query(models.Device).filter_by(id=config.flash_device).first()
+    device = sqlsession.query(models.Device).filter_by(id=config.config('flash_device')).first()
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect(('127.0.0.1', config.api_port))

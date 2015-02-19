@@ -40,13 +40,14 @@
                 <input class="form-control search_typeahead" placeholder="Search..." type="text" name="q">
             </form>
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="#">Settings</a></li>
-                <li {% if active == 'profile' %} class="active" {% endif %}><a href="{{ url_for('profile') }}">Profile</a></li>
                 <li {% if active == 'users' %} class="active" {% endif %}><a href="{{ url_for('users') }}">Users</a></li>
                 <li {% if active == 'tokens' %} class="active" {% endif %}><a href="{{ url_for('tokens') }}">Tokens</a></li>
                 <li {% if active == 'devices' %} class="active" {% endif %}><a href="{{ url_for('devices') }}">Devices</a></li>
                 <li {% if active == 'sounds' %} class="active" {% endif %}><a href="#">Sounds</a></li>
                 <li {% if active == 'logs' %} class="active" {% endif %}><a href="#">Logs</a></li>
+                <li><a href="{{ url_for('settings') }}">Settings</a></li>
+                <li {% if active == 'profile' %} class="active" {% endif %}><a href="{{ url_for('profile') }}">Profile</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
             </ul>
         </div>
     </div>

@@ -1,0 +1,24 @@
+{% extends "settings.html" %}
+{% block body %}
+    <h4>Read-Only</h4>
+    <table class="table table-hover table_general">
+        <tr>
+            <td>WEBUI_TOKEN</td>
+            <td>
+                {{ webui_token }}
+            </td>
+        </tr>
+        <tr>
+            <td>SERVER_TOKEN</td>
+            <td>
+                {{ server_token }}
+            </td>
+        </tr>
+        <tr>
+            <td>API_TOKEN</td>
+            <td>
+                {{ api_token }}
+            </td>
+        </tr>
+    </table>
+{% endblock %}

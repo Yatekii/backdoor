@@ -38,6 +38,10 @@ def str_to_date(datestring):
     return datetime.date(int(data[0]), int(data[1]), int(data[2]))
 
 
+def date_to_str(date):
+    return date.strftime('%Y-%m-%d')
+
+
 def generate_token():
     return ''.join(random.SystemRandom().choice(string.ascii_uppercase) for _ in range(config.secret_length))
 
