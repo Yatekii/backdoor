@@ -104,5 +104,15 @@ class Backdoor:
                 self.logger.debug('Token %s was flashed' % query.params[0])
             self.logger.debug('Broken query. Expected exactly 1 parameter.')
 
+        elif query.method == 'OPEN':
+            if len(query.params) == 1:
+                if query.token in self.connection_manager.webuis:
+                    response.create_open(config.server_token)
+                    self.issue_query(query.params[0], response)
+                    self.logger.debug('Sent OPEN to device with token %s.' % query.params[0])
+                else:
+                    self.logger.info('Requested flash came from a non webui or an unregistered one. It was discarded.')
+            self.logger.debug('Broken query. Expected exactly 1 parameter.')
+
 bd = Backdoor()
 bd.run()

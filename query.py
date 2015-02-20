@@ -62,9 +62,11 @@ class Query:
         self.query['auth']['token'] = auth_token
         self.query['cmd']['method'] = 'UNREGISTER'
 
-    def create_open(self, auth_token):
+    def create_open(self, auth_token, device_token=None):
         self.query['auth']['token'] = auth_token
         self.query['cmd']['method'] = 'OPEN'
+        if device_token:
+            self.query['cmd']['params'] = [device_token]
 
     def create_access(self, auth_token, token):
         self.query['auth']['token'] = auth_token

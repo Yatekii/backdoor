@@ -1,4 +1,5 @@
 {
+  "default_door_device": 1,
   "flash_device": 2,
   "semester_end_dates": [
     "2015-02-15",

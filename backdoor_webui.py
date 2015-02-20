@@ -120,6 +120,53 @@ def logout():
 # --------------------------------------------------     PROFILE    -------------------------------------------------- #
 
 
+@app.route('/open/', defaults={'id' : '0'})
+@app.route('/open/<id>', methods=['POST', 'GET'])
+@check_session()
+@helpers.handle_dbsession()
+def open(sqlsession, id):
+    id = int(id)
+    if id == 0:
+        id = int(config.config('default_door_device'))
+    if id > 0:
+        device = sqlsession.query(models.Device).filter_by(id=id).first()
+        if device:
+            user = sqlsession.query(models.User).filter_by(username=session['username']).first()
+            access_granted = False
+
+            if user.level > 9000:
+                access_granted = True
+            else:
+                for token in user.tokens:
+                    if token in device.tokens:
+                        access_granted = True
+            if not access_granted:
+                flash('No access on device with id %s' % id, 'danger')
+            else:
+                try:
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    s.connect((config.api_host, config.api_port))
+                    q = Query()
+                    q.create_register_webui(config.webui_token, session['webui_token'])
+                    s.send(q.to_command())
+                    q.create_open(session['webui_token'], device.pubkey)
+                    s.send(q.to_command())
+                    q.create_unregister(session['webui_token'])
+                    s.send(q.to_command())
+                    s.close()
+                    flash('%s has been opened.' % device.name, 'success')
+                except Exception as e:
+                    flash('Failed to access device %s' % device.name, 'danger')
+        else:
+            flash('Could not find device with id %s' % id, 'danger')
+    else:
+        flash('Could not find device with id %s' % id, 'danger')
+    return redirect(request.referrer)
+
+
+# --------------------------------------------------     PROFILE    -------------------------------------------------- #
+
+
 @app.route('/profile')
 @check_session()
 @helpers.handle_dbsession()
@@ -153,6 +200,7 @@ def settings(sqlsession, category):
             'settings_general.html',
             active=active,
             flash_device=config.config('flash_device'),
+            default_door_device=config.config('default_door_device'),
             devices=devices,
             semester_end_dates=config.config('semester_end_dates')
         )
@@ -162,6 +210,7 @@ def settings(sqlsession, category):
             'settings_general.html',
             active=active,
             flash_device=config.config('flash_device'),
+            default_door_device=config.config('default_door_device'),
             devices=devices,
             semester_end_dates=config.config('semester_end_dates')
         )
@@ -174,6 +223,7 @@ def change_general_settings(sqlsession):
     error = False
 
     config.store_config('flash_device', request.form['change_flash_device'])
+    config.store_config('default_door_device', request.form['change_default_door_device'])
 
     dates = []
     for key in request.form:
@@ -703,11 +753,13 @@ def flash_token(sqlsession):
     device = sqlsession.query(models.Device).filter_by(id=config.config('flash_device')).first()
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(('127.0.0.1', config.api_port))
+    s.connect((config.api_host, config.api_port))
     q = Query()
-    q.create_register_webui(config.webui_token, 'asdasdasdasd')
+    q.create_register_webui(config.webui_token, session['webui_token'])
     s.send(q.to_command())
-    q.create_flash('asdasdasdasd', token.value, device.pubkey)
+    q.create_flash(session['webui_token'], token.value, device.pubkey)
+    s.send(q.to_command())
+    q.create_unregister(session['webui_token'])
     s.send(q.to_command())
     s.close()
 
