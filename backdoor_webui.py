@@ -518,7 +518,7 @@ def add_token(sqlsession):
 
     if not owner:
         error = True
-        owner_query = sqlsession.query(models.User).filter_by(name=request.form['add_token_owner_id'])
+        owner_query = sqlsession.query(models.User).filter_by(name=request.form['add_token_owner'])
         if owner_query.count() == 1:
             error = False
             owner = owner_query.first()
@@ -592,8 +592,11 @@ def activate_token(sqlsession):
     error = True
     token = sqlsession.query(models.Token).filter_by(id=request.form['token_id']).first()
 
+    print(config.config('semester_end_dates'))
+
     if token:
-        for date in helpers.str_to_date(config.config('semester_end_dates')):
+        for date in config.config('semester_end_dates'):
+            date = helpers.str_to_date(date)
             if date <= helpers.today():
                 continue
             token.expiry_date = date
