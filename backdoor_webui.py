@@ -146,12 +146,13 @@ def open(sqlsession, id):
                 try:
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     s.connect((config.api_host, config.api_port))
+                    temporary_token = helpers.generate_token()
                     q = Query()
-                    q.create_register_webui(config.webui_token, session['webui_token'])
+                    q.create_register_webui(config.webui_token, temporary_token)
                     s.send(q.to_command())
-                    q.create_open(session['webui_token'], device.pubkey)
+                    q.create_open(temporary_token, device.pubkey)
                     s.send(q.to_command())
-                    q.create_unregister(session['webui_token'])
+                    q.create_unregister(temporary_token)
                     s.send(q.to_command())
                     s.close()
                     flash('%s has been opened.' % device.name, 'success')
@@ -393,6 +394,53 @@ def remove_user(sqlsession):
         flash('User with id %d was not found.' % request.form['user_id'], 'danger')
 
     return redirect(url_for('users'))
+
+
+@helpers.handle_dbsession()
+def change_user(sqlsession):
+    error = False
+    user = sqlsession.query(models.User).filter_by(id=request.form.get('change_user_id')).first()
+
+    if not user:
+        error = True
+        flash('User with id %s was not found.' % request.form.get('change_user_id'), 'danger')
+
+    try:
+        level = int(request.form['change_user_level'])
+    except Exception:
+        level = -1
+
+    if request.form['change_user_level'] == 'over 9000' or request.form['change_user_level'] == '> 9000' or request.form['change_user_level'] == 'over ninethousand':
+        level = 999
+
+    if level not in range(0, 10000):
+        error = True
+        flash('Please enter a valid number between 0 and 9999 as the userlevel.', 'danger')
+
+    if not re.match(r'[\w.-]+@[\w.-]+.\w+', request.form['change_user_email']):
+        error = True
+        flash('Please enter a valid email address.', 'danger')
+
+    if not error:
+        user.level = level
+        user.name = request.form['change_user_name']
+        user.email = request.form['change_user_email']
+        user.nethzid = request.form['change_user_nethzid']
+        flash('User %s has been changed.' % (user.name, user.nethzid), 'success')
+
+    return redirect(url_for('users', id=user.id))
+
+
+@app.route('/change/', defaults={'model': 'user', 'id': '0'})
+@app.route('/change/<model>/<id>', methods=['POST', 'GET'])
+@check_session()
+def change(model, id):
+    id = int(id)
+    if id > 0:
+        if model == 'user':
+            return change_user()
+        elif model == 'device':
+            return change_device()
 
 
 @app.route('/change_user_name', methods=['POST'])
@@ -754,12 +802,13 @@ def flash_token(sqlsession):
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((config.api_host, config.api_port))
+    temporary_token = temporary_token = helpers.generate_token()
     q = Query()
-    q.create_register_webui(config.webui_token, session['webui_token'])
+    q.create_register_webui(config.webui_token, temporary_token)
     s.send(q.to_command())
-    q.create_flash(session['webui_token'], token.value, device.pubkey)
+    q.create_flash(temporary_token, token.value, device.pubkey)
     s.send(q.to_command())
-    q.create_unregister(session['webui_token'])
+    q.create_unregister(temporary_token)
     s.send(q.to_command())
     s.close()
 
@@ -852,6 +901,23 @@ def remove_device(sqlsession):
         flash('Device with id %s was not found.' % request.form['device_id'], 'danger')
 
     return redirect(url_for('devices'))
+
+
+@helpers.handle_dbsession()
+def change_device(sqlsession):
+    error = False
+    device = sqlsession.query(models.Device).filter_by(id=request.form.get('change_device_id')).first()
+
+    if not device:
+        error = True
+        flash('Device with id %d was not found.' % request.form['change_device_id'], 'danger')
+
+    if not error:
+        device.name = request.form['change_device_name']
+        device.pubkey = request.form['change_device_pubkey']
+        flash('Device with id %d has been changed.' % device.id, 'success')
+
+    return redirect(url_for('devices', id=device.id))
 
 
 @app.route('/change_device_name', methods=['POST'])
