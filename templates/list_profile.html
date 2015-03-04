@@ -1,0 +1,4 @@
+<li{% if category == 'general' %} class="active" {% endif %}><a href="{{ url_for('profile', category='general') }}">General</a></li>
+<li{% if category == 'password' %} class="active" {% endif %}><a href="{{ url_for('profile', category='password') }}">Password</a></li>
+<li{% if category == 'settings' %} class="active" {% endif %}><a href="{{ url_for('profile', category='settings') }}">Settings</a></li>
+<li{% if category == 'tokens' %} class="active" {% endif %}><a href="{{ url_for('profile', category='tokens') }}">Tokens</a></li>

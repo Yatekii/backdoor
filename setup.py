@@ -12,7 +12,14 @@ models.Base.metadata.create_all(engine)
 session_factory = sessionmaker(bind=engine)
 s = session_factory()
 password = hashlib.sha256(b'1')
-u = models.User(username='yatekii', password=password.hexdigest(), level=9999)
+u = models.User(
+    username='yatekii',
+    password=password.hexdigest(),
+    level=9999,
+    name='Noah Huesser',
+    email='noah@bastli.ch',
+    nethzid='nhuesser'
+)
 s.add(u)
 s.commit()
 s.close()

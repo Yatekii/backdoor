@@ -1,10 +1,10 @@
 {
-  "default_door_device": 1,
-  "flash_device": 2,
-  "semester_end_dates": [
-    "2015-02-15",
-    "2015-09-13",
-    "2016-02-21",
-    "2016-09-18"
-  ]
+    "default_door_device": "2",
+    "flash_device": "1",
+    "semester_end_dates": [
+        "2015-02-15",
+        "2015-09-13",
+        "2016-02-21",
+        "2016-09-18"
+    ]
 }

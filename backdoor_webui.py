@@ -117,7 +117,7 @@ def logout():
     return redirect(url_for('login'))
 
 
-# --------------------------------------------------     PROFILE    -------------------------------------------------- #
+# --------------------------------------------------     OPEN    -------------------------------------------------- #
 
 
 @app.route('/open/', defaults={'id' : '0'})
@@ -126,40 +126,43 @@ def logout():
 @helpers.handle_dbsession()
 def open(sqlsession, id):
     id = int(id)
+    user = sqlsession.query(models.User).filter_by(username=session['username']).first()
+    device = None
     if id == 0:
-        id = int(config.config('default_door_device'))
-    if id > 0:
-        device = sqlsession.query(models.Device).filter_by(id=id).first()
-        if device:
-            user = sqlsession.query(models.User).filter_by(username=session['username']).first()
-            access_granted = False
-
-            if user.level > 9000:
-                access_granted = True
-            else:
-                for token in user.tokens:
-                    if token in device.tokens:
-                        access_granted = True
-            if not access_granted:
-                flash('No access on device with id %s' % id, 'danger')
-            else:
-                try:
-                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    s.connect((config.api_host, config.api_port))
-                    temporary_token = helpers.generate_token()
-                    q = Query()
-                    q.create_register_webui(config.webui_token, temporary_token)
-                    s.send(q.to_command())
-                    q.create_open(temporary_token, device.pubkey)
-                    s.send(q.to_command())
-                    q.create_unregister(temporary_token)
-                    s.send(q.to_command())
-                    s.close()
-                    flash('%s has been opened.' % device.name, 'success')
-                except Exception as e:
-                    flash('Failed to access device %s' % device.name, 'danger')
+        if user.default_device:
+            device = user.default_device
         else:
-            flash('Could not find device with id %s' % id, 'danger')
+            id = int(config.config('default_door_device'))
+    if id > 0 and not device:
+        device = sqlsession.query(models.Device).filter_by(id=id).first()
+
+    if device:
+        access_granted = False
+
+        if user.level > 9000:
+            access_granted = True
+        else:
+            for token in user.tokens:
+                if token in device.tokens:
+                    access_granted = True
+        if not access_granted:
+            flash('No access on device with id %s' % id, 'danger')
+        else:
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.connect((config.api_host, config.api_port))
+                temporary_token = helpers.generate_token()
+                q = Query()
+                q.create_register_webui(config.webui_token, temporary_token)
+                s.send(q.to_command())
+                q.create_open(temporary_token, device.pubkey)
+                s.send(q.to_command())
+                q.create_unregister(temporary_token)
+                s.send(q.to_command())
+                s.close()
+                flash('%s has been opened.' % device.name, 'success')
+            except Exception as e:
+                flash('Failed to access device %s' % device.name, 'danger')
     else:
         flash('Could not find device with id %s' % id, 'danger')
     return redirect(request.referrer)
@@ -168,19 +171,79 @@ def open(sqlsession, id):
 # --------------------------------------------------     PROFILE    -------------------------------------------------- #
 
 
-@app.route('/profile')
+@app.route('/profile/', defaults={'category': 'general'})
+@app.route('/profile/<category>', methods=['POST', 'GET'])
 @check_session()
 @helpers.handle_dbsession()
-def profile(sqlsession):
+def profile(sqlsession, category):
     active = 'profile'
+
     user = sqlsession.query(models.User).filter_by(username=session['username']).first()
-    return render_template('profile.html', active=active, user=user)
+
+    if category == 'password':
+        return render_template(
+            'profile_password.html',
+            active=active,
+            category=category,
+            user=user
+        )
+    elif category == 'settings':
+        devices = sqlsession.query(models.Device).all()
+        return render_template(
+            'profile_settings.html',
+            active=active,
+            category=category,
+            user=user,
+            devices=devices
+        )
+    elif category == 'tokens':
+        return render_template(
+            'profile_tokens.html',
+            active=active,
+            category=category,
+            user=user
+        )
+    else:
+        return render_template(
+            'profile_general.html',
+            active=active,
+            category=category,
+            user=user
+        )
+
+
+@app.route('/change_profile_settings', methods=['POST'])
+@check_session()
+@helpers.handle_dbsession()
+def change_profile_settings(sqlsession):
+    error = False
+    user = sqlsession.query(models.User).filter_by(id=request.form.get('change_user_id')).first()
+
+    if not user:
+        error = True
+        flash('User with id %s was not found.' % request.form.get('change_user_id'), 'danger')
+
+    device = sqlsession.query(models.Device).filter_by(id=request.form.get('change_user_device_id')).first()
+
+    if not device:
+        # if 0 != int(request.form.get('change_user_device_id')):
+        #     device = None
+        error = True
+        flash('Device with id %s was not found.' % request.form.get('change_user_device_id'), 'danger')
+
+
+
+    if not error:
+        user.default_device = device
+        flash('User %s has been changed.' % (user.name), 'success')
+
+    return redirect(url_for('profile', category='settings'))
 
 
 # --------------------------------------------------    SETTINGS    -------------------------------------------------- #
 
 
-@app.route('/settings/', defaults={'category' : 'list'})
+@app.route('/settings/', defaults={'category' : 'general'})
 @app.route('/settings/<category>', methods=['POST', 'GET'])
 @check_session()
 @helpers.handle_dbsession()
@@ -191,6 +254,7 @@ def settings(sqlsession, category):
         return render_template(
             'settings_readonly.html',
             active=active,
+            category=category,
             webui_token=config.webui_token,
             server_token=config.server_token,
             api_token=config.api_token
@@ -200,6 +264,7 @@ def settings(sqlsession, category):
         return render_template(
             'settings_general.html',
             active=active,
+            category=category,
             flash_device=config.config('flash_device'),
             default_door_device=config.config('default_door_device'),
             devices=devices,
@@ -210,6 +275,7 @@ def settings(sqlsession, category):
         return render_template(
             'settings_general.html',
             active=active,
+            category=category,
             flash_device=config.config('flash_device'),
             default_door_device=config.config('default_door_device'),
             devices=devices,
@@ -426,9 +492,30 @@ def change_user(sqlsession):
         user.name = request.form['change_user_name']
         user.email = request.form['change_user_email']
         user.nethzid = request.form['change_user_nethzid']
-        flash('User %s has been changed.' % (user.name, user.nethzid), 'success')
+        flash('User %s has been changed.' % (user.name), 'success')
 
-    return redirect(url_for('users', id=user.id))
+    return redirect(request.referrer)
+
+
+@helpers.handle_dbsession()
+def change_password(sqlsession):
+    error = False
+    user = sqlsession.query(models.User).filter_by(id=request.form.get('change_user_id')).first()
+
+    if not user:
+        error = True
+        flash('User with id %s was not found.' % request.form.get('change_user_id'), 'danger')
+
+    if request.form['change_user_password'] != request.form['change_user_password_validation']:
+        error = True
+        flash('The entered passwords do not match.', 'danger')
+
+    if not error:
+        password = hashlib.sha256(request.form['change_user_password'].encode('utf-8'))
+        user.password = password.hexdigest()
+        flash('The password has ben changed.', 'success')
+
+    return redirect(url_for('profile', category='password'))
 
 
 @app.route('/change/', defaults={'model': 'user', 'id': '0'})
@@ -439,6 +526,8 @@ def change(model, id):
     if id > 0:
         if model == 'user':
             return change_user()
+        if model == 'password':
+            return change_password()
         elif model == 'device':
             return change_device()
 

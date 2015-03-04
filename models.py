@@ -36,6 +36,7 @@ class User(Base):
     email = Column(String)
     nethzid = Column(String)
     welcome_sound = Column(String)
+    default_device_id = Column(Integer, ForeignKey('devices.id'))
     tokens = relationship('Token', lazy='dynamic', backref='owner', cascade='all, delete-orphan')
 
 
@@ -48,3 +49,4 @@ class Device(Base):
     description = Column(String)
     pubkey = Column(String)
     tokens = relationship('Token', secondary=token_device_table, backref='devices')
+    used_by_default_by = relationship('User', backref='default_device')
