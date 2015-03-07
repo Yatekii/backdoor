@@ -20,3 +20,4 @@ class Device(Base):
     pubkey = Column(String)
     tokens = relationship('Token', secondary=token_device_table, backref='devices')
     used_by_default_by = relationship('User', backref='default_device')
+

@@ -1,0 +1,82 @@
+<h4>{{ user.name }}</h4>
+<form action="{{ url_for('user.change', id=user.id) }}" method=post>
+    <table class="table table-hover table_general">
+        <tr>
+            <td>ID</td>
+            <td>{{ user.id }}</td>
+        </tr>
+        <tr>
+            <td>Level</td>
+            <td>
+                <input type="text" name="change_user_level" class="form-control" title="Token owner" value="{{ user.level }}" />
+            </td>
+        </tr>
+        <tr>
+            <td>Name</td>
+            <td>
+                <input type="text" name="change_user_name" class="form-control" title="Token owner" value="{{ user.name }}" />
+            </td>
+        </tr>
+        <tr>
+            <td>Email</td>
+            <td>
+                <input type="text" name="change_user_email" class="form-control" title="Token owner" value="{{ user.email }}" />
+            </td>
+        </tr>
+        <tr>
+            <td>nethzid</td>
+            <td>
+                <input type="text" name="change_user_nethzid" class="form-control" title="Token owner" value="{{ user.nethzid }}" />
+                <input type="text" name="change_user_id" class="invisible" title="" value="{{ user.id }}" />
+            </td>
+        </tr>
+        <tr>
+            <td>Tokens</td>
+            <td>
+                 [
+                {% for token in user.tokens %}
+                <a href="{{ url_for('token.view', id=token.id) }}">{{ token.id }}</a> |
+                {% else %}
+                {% endfor %}
+                <a href="{{ url_for('token.view', token_owner_id=user.id, token_owner_name=user.name) }}">+</a>
+                ]
+            </td>
+        </tr>
+        <tr>
+            <td>Welcome Sound</td>
+            <td>
+                <select name="change_user_welcome_sound" class="form-control">
+                    <option value="">NONE</option>
+                    {% for sound in sounds %}
+                        <option value="sound['path']" {% if previous['user_welcome_sound'] == sound.path %}selected="selected" {% endif %}>sound['name']</option>
+                    {% endfor %}
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>Creation Date</td>
+            <td>{{ user.creation_date }}</td>
+        </tr>
+        <tr>
+            <td>Change?</td>
+            <td>
+                <input type="submit" value="Change" class="form-control btn-success" >
+            </td>
+        </tr>
+    </table>
+</form>
+<table class="table table-hover table_general">
+    <tr>
+        <td>
+            <form class="remove_form" action="{{ url_for('user.remove') }}" method=post>
+                <input type="submit" class="form-control btn-danger" value="Remove" />
+                <input name="user_id" class="form-control invisible" title="User id" value="{{ user.id }}" />
+            </form>
+        </td>
+    </tr>
+</table>
+<script type="text/javascript">
+
+    remove_init();
+
+</script>

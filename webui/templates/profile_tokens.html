@@ -1,0 +1,20 @@
+{% extends "profile.html" %}
+{% block body %}
+<h4>{{ user.username }}</h4>
+<table class="table table-hover table_general">
+    <tr>
+        <td>Tokens</td>
+        <td style="text-align: left">
+            {% for token in user.tokens %}
+                <a href="{{ url_for('token.view', id=token.id) }}">{{ token.id }}</a> with access on: [
+                {% for device in token.devices %}
+                    <a href="{{ url_for('device.view', id=device.id) }}">{{ device.name }}</a>
+                {% endfor %}
+                ]
+            </br>
+            {% else %}
+            {% endfor %}
+        </td>
+    </tr>
+</table>
+{% endblock %}

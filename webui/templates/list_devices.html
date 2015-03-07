@@ -1,0 +1,11 @@
+{% if active != 'search' %}
+    <li {% if id == 0 %} class="active" {% endif %}><a href="{{ url_for('device.view') }}">Add Device</a></li>
+    {% for device in devices %}
+        <li {% if id == device.id %} class="active" {% endif %}><a href="{{ url_for('device.view', id=device.id) }}">{{ device.name }}</a></li>
+    {% endfor %}
+{% else %}
+    <li style="background-color: #EEEEEE;"><a style="color: #333333;" href="{{ url_for('device.view') }}">Devices</a></li>
+    {% for device in devices %}
+        <li {% if (not type or type == 'device') and id == device.id %} class="active" {% endif %}><a href="{{ url_for('search.search', q=q, type='device', id=device.id) }}">{{ device.name }}</a></li>
+    {% endfor %}
+{% endif %}

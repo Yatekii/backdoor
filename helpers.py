@@ -6,8 +6,8 @@ import string
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+
 import config
-import models
 
 
 engine = create_engine(config.db, echo=config.sql_debug)
@@ -27,6 +27,9 @@ def handle_dbsession():
             return r
         return inner
     return handle_helper
+
+
+import models
 
 
 def today():

@@ -1,0 +1,2 @@
+<li{% if category == 'readonly' %} class="active" {% endif %}><a href="{{ url_for('settings.readonly', category='readonly') }}">Read-Only</a></li>
+<li{% if category == 'general' %} class="active" {% endif %}><a href="{{ url_for('settings.general', category='general') }}">General</a></li>

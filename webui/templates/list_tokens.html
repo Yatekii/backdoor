@@ -1,0 +1,4 @@
+<li {% if id == 0 %} class="active" {% endif %}><a href="{{ url_for('token.view', id=0) }}">Add Token</a></li>
+{% for token in tokens %}
+    <li {% if id == token.id %} class="active" {% endif %}><a href="{{ url_for('token.view', id=token.id) }}">{{ token.id }} [{{ token.owner.name}}]</a></li>
+{% endfor %}
