@@ -1,0 +1,15 @@
+{% extends "layout_admin.html" %}
+
+{% block navi %}
+    {% include "list_users.html" %}
+    {% include "list_devices.html" %}
+{% endblock %}
+{% block body %}
+    {% if id > 0 %}
+        {% if type == 'user' %}
+            {% include "edit_user.html" %}
+        {% elif type == 'device' %}
+            {% include "edit_device.html" %}
+        {% endif %}
+    {% endif %}
+{% endblock %}
