@@ -1,7 +1,6 @@
-# ------------- CONSTANT ----------------
-
-import datetime
 import json
+
+# ------------- CONSTANT ----------------
 
 webui_host = '127.0.0.1'
 webui_port = 8001
@@ -17,6 +16,7 @@ sql_debug = False
 token_length = 16
 secret_length = 16
 
+# Keep this very secret
 webui_sessions_secret = 'adsjkfhasdjkfhjkasdhfkasdjhfkloajshdfjskdf'
 
 ping_interval = 30
