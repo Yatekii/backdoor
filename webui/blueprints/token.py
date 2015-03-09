@@ -113,7 +113,7 @@ def revoke(sqlsession):
     else:
         flash('Token with id %d was not found.' % request.form['token_id'], 'danger')
 
-    return redirect(url_for('token.view', id=token.id))
+    return redirect(request.referrer)
 
 
 @blueprint.route('/activate', methods=['POST'])
@@ -125,7 +125,7 @@ def activate():
     else:
         flash('Token expiry date has not been modified. Please contact an administrator.', 'danger')
 
-    return redirect(url_for('token.view', id=request.form['token_id']))
+    return redirect(request.referrer)
 
 
 @blueprint.route('/link_to_device', methods=['POST'])

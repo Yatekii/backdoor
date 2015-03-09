@@ -98,7 +98,8 @@ def tokens(sqlsession):
         'profile_tokens.html',
         active=active,
         category='tokens',
-        user=user
+        user=user,
+        date=helpers.today()
     )
 
 

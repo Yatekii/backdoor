@@ -4,17 +4,34 @@
 <table class="table table-hover table_general">
     <tr>
         <td>Tokens</td>
-        <td style="text-align: left">
-            {% for token in user.tokens %}
+        <td>Revoke?</td>
+    </tr>
+    {% for token in user.tokens %}
+        <tr>
+            <td style="text-align: left">
                 <a href="{{ url_for('token.view', id=token.id) }}">{{ token.id }}</a> with access on: [
                 {% for device in token.devices %}
                     <a href="{{ url_for('device.view', id=device.id) }}">{{ device.name }}</a>
                 {% endfor %}
                 ]
-            </br>
-            {% else %}
-            {% endfor %}
-        </td>
-    </tr>
+            </td>
+            <td>
+                {% if token.expiry_date > date %}
+                    <form class="revoke_form button_float_left" action="{{ url_for('token.revoke') }}" method=post>
+                        <input type="submit" class="btn btn-default btn-warning" value="Revoke" />
+                        <input name="token_id" class="invisible" value="{{ token.id }}" title="Token id"/>
+                    </form>
+                {% else %}
+                    <input type="submit" class="btn btn-default btn-danger" value="Expired" disabled />
+                {% endif %}
+            </td>
+        </tr>
+    {% else %}
+        <tr>
+            <td>
+                Yo are not in posession of any tokens!
+            </td>
+        </tr>
+    {% endfor %}
 </table>
 {% endblock %}
