@@ -29,7 +29,8 @@ from flask import Blueprint
 
 import helpers
 import models
-from webui.wrappers import check_session
+from webui.wrappers import check_session, check_rights
+from webui.permission_flags import *
 
 blueprint = Blueprint('user', __name__, template_folder='templates')
 
@@ -37,6 +38,7 @@ blueprint = Blueprint('user', __name__, template_folder='templates')
 @blueprint.route('/view', defaults={'id': '0'})
 @blueprint.route('/view/<id>/', methods=['POST', 'GET'])
 @check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_USERS)
 @helpers.handle_dbsession()
 def view(sqlsession, id):
     id = int(id)
@@ -60,6 +62,7 @@ def view(sqlsession, id):
 
 @blueprint.route('/add', methods=['POST'])
 @check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_USERS)
 def add():
     id, errors = models.User.add(
         username=request.form['add_user_username'].lower(),
@@ -91,6 +94,7 @@ def add():
 @blueprint.route('/change/', defaults={'id': '0'})
 @blueprint.route('/change/<id>', methods=['POST', 'GET'])
 @check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_USERS)
 def change(id):
     print(request.form)
     id = int(id)
@@ -124,6 +128,7 @@ def change(id):
 
 @blueprint.route('/remove', methods=['POST'])
 @check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_USERS)
 @helpers.handle_dbsession()
 def remove(sqlsession):
     user = sqlsession.query(models.User).filter_by(id=request.form['user_id']).first()

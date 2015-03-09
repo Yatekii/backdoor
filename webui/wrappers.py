@@ -40,9 +40,7 @@ def check_secret():
                 return f(*args, **kwargs)
             else:
                 abort(403)
-
         return inner
-
     return checker_helper
 
 
@@ -51,12 +49,25 @@ def check_session():
         @functools.wraps(f)
         @helpers.handle_dbsession()
         def inner(sqlsession, *args, **kwargs):
-
-            if 'username' in session and sqlsession.query(models.User).filter_by(username=session['username']).count() == 1:
+            if 'username' in session\
+                    and sqlsession.query(models.User).filter_by(username=session['username']).count() == 1:
                 return f(*args, **kwargs)
             else:
                 return redirect(url_for('authentication.logout'))
-
         return inner
+    return checker_helper
 
+
+def check_rights(flag):
+    def checker_helper(f):
+        @functools.wraps(f)
+        @helpers.handle_dbsession()
+        def inner(sqlsession, *args, **kwargs):
+            level = sqlsession.query(models.User).filter_by(id=session['id']).first().level
+            print(level, flag)
+            if level & flag > 0:
+                return f(*args, **kwargs)
+            else:
+                return redirect(url_for('authentication.forbidden'))
+        return inner
     return checker_helper

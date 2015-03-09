@@ -47,6 +47,7 @@ def login(sqlsession):
             session['failed_attempts'] = 0
         if user and user.level > 9000:
             session['username'] = user.username
+            session['id'] = user.id
             session.permanent = True
             session.pop('failed_attempts', None)
             return redirect(url_for('profile.general'))
@@ -61,4 +62,10 @@ def login(sqlsession):
 @blueprint.route('/logout')
 def logout():
     session.pop('username', None)
+    session.pop('id', None)
     return redirect(url_for('authentication.login'))
+
+
+@blueprint.route('/forbidden')
+def forbidden():
+    return render_template('forbidden.html')

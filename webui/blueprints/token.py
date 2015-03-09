@@ -33,7 +33,8 @@ from flask import Blueprint
 import config
 import helpers
 import models
-from webui.wrappers import check_session
+from webui.wrappers import check_session, check_rights
+from webui.permission_flags import *
 
 
 blueprint = Blueprint('token', __name__, template_folder='templates')
@@ -42,6 +43,7 @@ blueprint = Blueprint('token', __name__, template_folder='templates')
 @blueprint.route('/view', defaults={'id': '0'})
 @blueprint.route('/view/<id>/', methods=['POST', 'GET'])
 @check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_TOKENS)
 @helpers.handle_dbsession()
 def view(sqlsession, id):
     id = int(id)
@@ -62,6 +64,7 @@ def view(sqlsession, id):
 
 @blueprint.route('/add', methods=['POST'])
 @check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_TOKENS)
 @helpers.handle_dbsession()
 def add(sqlsession):
     id, errors = models.Token.add(
@@ -86,6 +89,7 @@ def add(sqlsession):
 
 @blueprint.route('/remove', methods=['POST'])
 @check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_TOKENS)
 @helpers.handle_dbsession()
 def remove(sqlsession):
     token = sqlsession.query(models.Token).filter_by(id=request.form['token_id']).first()
@@ -102,6 +106,7 @@ def remove(sqlsession):
 
 @blueprint.route('/revoke', methods=['POST'])
 @check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_TOKENS)
 @helpers.handle_dbsession()
 def revoke(sqlsession):
     token = sqlsession.query(models.Token).filter_by(id=request.form['token_id']).first()
@@ -117,6 +122,7 @@ def revoke(sqlsession):
 
 
 @blueprint.route('/activate', methods=['POST'])
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_TOKENS)
 @check_session()
 def activate():
     date = models.Token.activate(int(request.form['token_id']))
@@ -130,6 +136,7 @@ def activate():
 
 @blueprint.route('/link_to_device', methods=['POST'])
 @check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_TOKENS)
 @helpers.handle_dbsession()
 def link_to_device(sqlsession):
     error = False
@@ -153,6 +160,7 @@ def link_to_device(sqlsession):
 
 @blueprint.route('/remove_link_to_device', methods=['POST'])
 @check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_TOKENS)
 @helpers.handle_dbsession()
 def remove_link_to_device(sqlsession):
     error = False
@@ -176,6 +184,7 @@ def remove_link_to_device(sqlsession):
 
 @blueprint.route('/flashed', methods=['POST'])
 @check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_TOKENS)
 @helpers.handle_dbsession()
 def flashed(sqlsession):
     token = sqlsession.query(models.Token).filter_by(id=request.form.get('token_id')).first()
@@ -190,6 +199,7 @@ def flashed(sqlsession):
 
 @blueprint.route('/flash', methods=['POST'])
 @check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_TOKENS)
 @helpers.handle_dbsession()
 def flash_(sqlsession):
     error, errors = models.Token.flash(request.form.get('token_id'), config.config('flash_device'))

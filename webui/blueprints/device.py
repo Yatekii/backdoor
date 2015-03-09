@@ -31,7 +31,8 @@ from flask import Blueprint
 
 import helpers
 import models
-from webui.wrappers import check_session
+from webui.wrappers import check_session, check_rights
+from webui.permission_flags import *
 
 blueprint = Blueprint('device', __name__, template_folder='templates')
 
@@ -39,6 +40,7 @@ blueprint = Blueprint('device', __name__, template_folder='templates')
 @blueprint.route('/view/', defaults={'id': '0'})
 @blueprint.route('/view/<id>/', methods=['POST', 'GET'])
 @check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_DEVICES)
 @helpers.handle_dbsession()
 def view(sqlsession, id):
     id = int(id)
@@ -61,6 +63,7 @@ def view(sqlsession, id):
 
 @blueprint.route('/add', methods=['POST'])
 @check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_DEVICES)
 @helpers.handle_dbsession()
 def add(sqlsession):
     error = False
@@ -86,6 +89,7 @@ def add(sqlsession):
 
 @blueprint.route('/remove', methods=['POST'])
 @check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_DEVICES)
 @helpers.handle_dbsession()
 def remove(sqlsession):
     device = sqlsession.query(models.Device).filter_by(id=request.form['device_id']).first()
@@ -102,6 +106,7 @@ def remove(sqlsession):
 
 @blueprint.route('/change', methods=['POST'])
 @check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_DEVICES)
 @helpers.handle_dbsession()
 def change(sqlsession):
     error = False

@@ -1,14 +1,8 @@
-from models.base import Base
-from sqlalchemy import Column, Integer, String, Date, Boolean, ForeignKey
-
-
-import re
-import hashlib
 import socket
 
-
+from models.base import Base
+from sqlalchemy import Column, Integer, String, Date, Boolean, ForeignKey
 import helpers
-import permission_flags
 import models.device
 from query import Query
 import config
