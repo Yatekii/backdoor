@@ -35,7 +35,7 @@ def check_session():
             if 'username' in session and sqlsession.query(models.User).filter_by(username=session['username']).count() == 1:
                 return f(*args, **kwargs)
             else:
-                return redirect(url_for('logout'))
+                return redirect(url_for('authentication.logout'))
 
         return inner
 

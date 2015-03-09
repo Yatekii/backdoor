@@ -6,13 +6,17 @@ from flask import url_for
 from flask import redirect
 from flask import request
 from flask import session
+from flask import Blueprint
 
 
 import helpers
 import models
-from webui import app
 
-@app.route('/login', methods=['GET', 'POST'])
+
+blueprint = Blueprint('authentication', __name__, template_folder='templates')
+
+
+@blueprint.route('/login', methods=['GET', 'POST'])
 @helpers.handle_dbsession()
 def login(sqlsession):
     if request.method == 'POST':
@@ -24,16 +28,16 @@ def login(sqlsession):
             session['username'] = user.username
             session.permanent = True
             session.pop('failed_attempts', None)
-            return redirect(url_for('profile'))
+            return redirect(url_for('profile.general'))
         flash('Wrong password, username or permission.', 'danger')
         session['failed_attempts'] = int(session['failed_attempts']) + 1
         return render_template('login.html', username=request.form['username'])
     if 'username' in session:
-        return redirect(url_for('profile'))
+        return redirect(url_for('profile.general'))
     return render_template('login.html')
 
 
-@app.route('/logout')
+@blueprint.route('/logout')
 def logout():
     session.pop('username', None)
-    return redirect(url_for('login'))
+    return redirect(url_for('authentication.login'))
