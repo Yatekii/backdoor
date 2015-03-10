@@ -22,7 +22,41 @@
         <tr>
             <td>Level</td>
             <td>
-                <input type="text" name="add_user_level" class="form-control" value="{{ previous['user_level'] }}" />
+                <div class="checkbox">
+                    <label>
+                    <input type="checkbox"
+                           name="add_user_permission0"
+                           value="1" {% if previous['add_user_permission0'] %}checked{% endif %}/>Can login
+                    </label>
+                </div>
+                <div class="checkbox">
+                    <label>
+                    <input type="checkbox"
+                           name="add_user_permission1"
+                           value="1" {% if previous['add_user_permission1'] %}checked{% endif %}/>Can manipulate users
+                    </label>
+                </div>
+                <div class="checkbox">
+                    <label>
+                    <input type="checkbox"
+                           name="add_user_permission2"
+                           value="1" {% if previous['add_user_permission2'] %}checked{% endif %}/>Can manipulate tokens
+                    </label>
+                </div>
+                <div class="checkbox">
+                    <label>
+                    <input type="checkbox"
+                           name="add_user_permission3"
+                           value="1" {% if previous['add_user_permission3'] %}checked{% endif %}/>Can manipulate devices
+                    </label>
+                </div>
+                <div class="checkbox">
+                    <label>
+                    <input type="checkbox"
+                           name="add_user_permission4"
+                           value="1" {% if previous['add_user_permission4'] %}checked{% endif %}/>OVER NINETHOUSAND
+                    </label>
+                </div>
             </td>
         </tr>
         <tr>

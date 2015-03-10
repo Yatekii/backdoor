@@ -32,7 +32,7 @@ from flask import Blueprint
 
 import helpers
 import models
-
+from webui.permission_flags import *
 
 blueprint = Blueprint('authentication', __name__, template_folder='templates')
 
@@ -45,7 +45,7 @@ def login(sqlsession):
         user = sqlsession.query(models.User).filter_by(username=request.form['username'].lower(), password=password.hexdigest()).first()
         if 'failed_attempts' not in session:
             session['failed_attempts'] = 0
-        if user and user.level > 9000:
+        if user and user.level & (CAN_LOGIN | OVER_NINETHOUSAND):
             session['username'] = user.username
             session['id'] = user.id
             session.permanent = True

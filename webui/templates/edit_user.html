@@ -8,7 +8,41 @@
         <tr>
             <td>Level</td>
             <td>
-                <input type="text" name="change_user_level" class="form-control" title="Token owner" value="{{ user.level }}" />
+                <div class="checkbox">
+                    <label>
+                    <input type="checkbox"
+                           name="change_user_permission0"
+                           value="1" {% if permissions[0] > 0 %}checked{% endif %}/>Can login
+                    </label>
+                </div>
+                <div class="checkbox">
+                    <label>
+                    <input type="checkbox"
+                           name="change_user_permission1"
+                           value="1" {% if permissions[1] > 0 %}checked{% endif %}/>Can manipulate users
+                    </label>
+                </div>
+                <div class="checkbox">
+                    <label>
+                    <input type="checkbox"
+                           name="add_user_permission2"
+                           value="1" {% if permissions[2] > 0 %}checked{% endif %}/>Can manipulate tokens
+                    </label>
+                </div>
+                <div class="checkbox">
+                    <label>
+                    <input type="checkbox"
+                           name="add_user_permission3"
+                           value="1" {% if permissions[3] > 0 %}checked{% endif %}/>Can manipulate devices
+                    </label>
+                </div>
+                <div class="checkbox">
+                    <label>
+                    <input type="checkbox"
+                           name="add_user_permission14"
+                           value="1" {% if permissions[4] > 0 %}checked{% endif %}/>OVER NINETHOUSAND
+                    </label>
+                </div>
             </td>
         </tr>
         <tr>

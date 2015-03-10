@@ -114,7 +114,7 @@ class User(Base):
         email = None
         nethzid = None
 
-        if(type(user) == int):
+        if type(user) == int:
             user = sqlsession.query(User).filter_by(id=user).first()
 
         if not user:
@@ -136,7 +136,7 @@ class User(Base):
             elif attribute == 'level':
                 if kwargs[attribute] == 'over 9000' or kwargs[attribute] == '> 9000' or kwargs[attribute] == 'over ninethousand':
                     kwargs[attribute] = 16384
-                if type(kwargs[attribute]) == int:
+                if type(kwargs[attribute]) != int:
                     error = True
                     errors.append(('level', 'Please enter a valid number as the userlevel.'))
                 else:

@@ -48,6 +48,16 @@ def view(sqlsession, id):
     if id > 0:
         user = sqlsession.query(models.User).filter_by(id=int(id)).first()
 
+    permissions = None
+    if user:
+        permissions = [
+            user.level & CAN_LOGIN,
+            user.level & MANIPULATE_USERS,
+            user.level & MANIPULATE_TOKENS,
+            user.level & MANIPULATE_DEVICES,
+            user.level & OVER_NINETHOUSAND
+        ]
+
     users = sqlsession.query(models.User).filter_by().order_by(models.User.name.asc()).all()
     return render_template(
         'user.html',
@@ -56,6 +66,7 @@ def view(sqlsession, id):
         id=id,
         user=user,
         users=users,
+        permissions=permissions,
         previous=dict(request.args.items(multi=False))
     )
 
@@ -64,10 +75,16 @@ def view(sqlsession, id):
 @check_session()
 @check_rights(OVER_NINETHOUSAND | MANIPULATE_USERS)
 def add():
+    level = 0;
+    permissions = {}
+    for checkbox in request.form:
+        if 'permission' in checkbox:
+            level |= 1 << int(checkbox.split('permission')[1])
+            permissions[checkbox] = 1
     id, errors = models.User.add(
         username=request.form['add_user_username'].lower(),
         password=request.form['add_user_password'],
-        level=request.form['add_user_level'],
+        level=level,
         name=request.form['add_user_name'],
         email=request.form['add_user_email'],
         nethzid=request.form['add_user_nethzid']
@@ -84,9 +101,9 @@ def add():
             user_username=request.form['add_user_username'],
             user_password=request.form['add_user_password'],
             user_name=request.form['add_user_name'],
-            user_level=request.form['add_user_level'],
             user_email=request.form['add_user_email'],
-            user_nethzid=request.form['add_user_nethzid']
+            user_nethzid=request.form['add_user_nethzid'],
+            **permissions
         ))
 
 
@@ -96,7 +113,6 @@ def add():
 @check_session()
 @check_rights(OVER_NINETHOUSAND | MANIPULATE_USERS)
 def change(id):
-    print(request.form)
     id = int(id)
     if id > 0:
         if 'change_user_password_validate' in request.form:
@@ -109,12 +125,18 @@ def change(id):
                 for error in errors:
                     flash(error[1], 'danger')
                 return redirect(url_for('profile.password'))
-            flash('The password has ben changed.', 'success')
+            else:
+                flash('The password has ben changed.', 'success')
             return redirect(url_for('profile.password'))
         else:
+            level = 0
+            for checkbox in request.form:
+                if 'permission' in checkbox:
+                    level |= 1 << int(checkbox.split('permission')[1])
+            print(level)
             id, errors = models.User.change(
                 id,
-                level=request.form['change_user_level'],
+                level=level,
                 name=request.form['change_user_name'],
                 email=request.form['change_user_email'],
                 nethzid=request.form['change_user_nethzid']
@@ -122,7 +144,8 @@ def change(id):
             if errors:
                 for error in errors:
                     flash(error[1], 'danger')
-            flash('User #%d has been changed.' % id, 'success')
+            else:
+                flash('User #%d has been changed.' % id, 'success')
             return redirect(request.referrer)
 
 
