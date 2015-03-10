@@ -18,14 +18,12 @@
 
 """
 
-
 from flask import flash
 from flask import render_template
 from flask import url_for
 from flask import redirect
 from flask import request
 from flask import Blueprint
-
 
 import config
 import helpers
@@ -62,10 +60,10 @@ def general(sqlsession):
         'settings_general.html',
         active=active,
         category='general',
-        flash_device=config.config('flash_device'),
-        default_door_device=config.config('default_door_device'),
+        flash_device=config.read_config('flash_device'),
+        default_door_device=config.read_config('default_door_device'),
         devices=devices,
-        semester_end_dates=config.config('semester_end_dates')
+        semester_end_dates=config.read_config('semester_end_dates')
     )
 
 

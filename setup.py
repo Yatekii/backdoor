@@ -27,8 +27,8 @@ import config
 import models
 
 engine = create_engine(config.db, echo=config.sql_debug)
-models.Base.metadata.drop_all(engine)
-models.Base.metadata.create_all(engine)
+models.base.Base.metadata.drop_all(engine)
+models.base.Base.metadata.create_all(engine)
 
 session_factory = sessionmaker(bind=engine)
 s = session_factory()

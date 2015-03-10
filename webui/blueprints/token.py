@@ -18,9 +18,7 @@
 
 """
 
-
 import datetime
-
 
 from flask import flash
 from flask import render_template
@@ -28,7 +26,6 @@ from flask import url_for
 from flask import redirect
 from flask import request
 from flask import Blueprint
-
 
 import config
 import helpers
@@ -202,7 +199,7 @@ def flashed(sqlsession):
 @check_rights(OVER_NINETHOUSAND | MANIPULATE_TOKENS)
 @helpers.handle_dbsession()
 def flash_(sqlsession):
-    error, errors = models.Token.flash(request.form.get('token_id'), config.config('flash_device'))
+    error, errors = models.Token.flash(request.form.get('token_id'), config('flash_device'))
     if error:
         for e in errors:
             flash(e[1], 'danger')

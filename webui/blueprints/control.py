@@ -18,7 +18,6 @@
 
 """
 
-
 import socket
 
 from flask import flash
@@ -26,7 +25,6 @@ from flask import redirect
 from flask import request
 from flask import session
 from flask import Blueprint
-
 
 import config
 import helpers
@@ -50,7 +48,7 @@ def open(sqlsession, id):
         if user.default_device:
             device = user.default_device
         else:
-            id = int(config.config('default_door_device'))
+            id = int(config('default_door_device'))
     if id > 0 and not device:
         device = sqlsession.query(models.Device).filter_by(id=id).first()
 

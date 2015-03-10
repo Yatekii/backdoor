@@ -85,7 +85,7 @@ class Token(Base):
             token = sqlsession.query(models.Token).filter_by(id=token).first()
 
         if token:
-            for date in config.config('semester_end_dates'):
+            for date in config('semester_end_dates'):
                 date = helpers.str_to_date(date)
                 if date <= helpers.today():
                     continue

@@ -64,7 +64,6 @@ def check_rights(flag):
         @helpers.handle_dbsession()
         def inner(sqlsession, *args, **kwargs):
             level = sqlsession.query(models.User).filter_by(id=session['id']).first().level
-            print(level, flag)
             if level & flag > 0:
                 return f(*args, **kwargs)
             else:

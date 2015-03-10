@@ -32,12 +32,13 @@ api_token = 'VERYSECUREPASSPHRASE'
 
 # ------------- CUSTO)M ------------------
 
-def config(key, default=None):
-    data_default = open('config_default.json')
+
+def read_config(key, default=None):
+    data_default = open('config/config_default.json')
     conf_default = json.loads(data_default.read())
     data_default.close()
 
-    data_custom = open('config_custom.json')
+    data_custom = open('config/config_custom.json')
     conf_custom = json.loads(data_custom.read())
     data_custom.close()
 
@@ -48,9 +49,10 @@ def config(key, default=None):
     else:
         return default
 
+
 def store_config(key, value):
     print(key, value)
-    with open('config_custom.json', 'r+') as data_custom:
+    with open('config/config_custom.json', 'r+') as data_custom:
         conf_custom = json.loads(data_custom.read())
         conf_custom[key] = value
         data_custom.seek(0)
