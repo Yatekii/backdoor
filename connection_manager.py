@@ -39,8 +39,10 @@ class ConnectionManager(Thread):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind((host, port))
         self.socket.settimeout(2.0)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.logger = logging.getLogger('backdoor')
         self.logger.info('Server started! Listening on port %d' % port)
+        self.stoped = False
 
     def run(self):
         while self.running:
@@ -66,11 +68,21 @@ class ConnectionManager(Thread):
                     self.logger.exception(e)
 
         self.logger.info('Connection manager was shut down.')
+        self.stoped = True
         return
 
     def stop(self):
         self.logger.info('Halt all threads.')
         for connection in self.connections:
             connection.stop()
-        self.logger.info('Halted all threads.')
         self.running = False
+        while not self.stoped:
+            continue
+        try:
+            self.socket.close()
+        except OSError as e:
+            if e.args[0] == 9:
+                pass
+            else:
+                raise e
+        self.logger.info('Halted all threads.')
