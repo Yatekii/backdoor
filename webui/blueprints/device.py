@@ -137,7 +137,6 @@ def change(sqlsession):
 def revoke(sqlsession):
     error = False
     device = sqlsession.query(models.Device).filter_by(id=int(request.form.get('change_device_id'))).first()
-    print(int(request.form.get('change_device_id')))
     if not device:
         error = True
         flash('Device with id %s was not found.' % request.form['change_device_id'], 'danger')

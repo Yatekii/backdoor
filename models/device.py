@@ -33,21 +33,22 @@ class Device(Base):
         errors = []
         device = sqlsession.query(Device).filter_by(id=device).first()
         if device:
-            try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.connect((config.api_host, config.api_port))
-                temporary_token = helpers.generate_token()
-                q = Query()
-                q.create_register_webui(config.webui_token, temporary_token)
-                s.send(q.to_command())
-                q.create_kick(temporary_token, device.pubkey)
-                s.send(q.to_command())
-                q.create_unregister(temporary_token)
-                s.send(q.to_command())
-                s.close()
-            except Exception:
-                error = True
-                errors.append(('flash', 'Connection to device failed.'))
+            if device.is_online:
+                try:
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    s.connect((config.api_host, config.api_port))
+                    temporary_token = helpers.generate_token()
+                    q = Query()
+                    q.create_register_webui(config.webui_token, temporary_token)
+                    s.send(q.to_command())
+                    q.create_kick(temporary_token, device.pubkey)
+                    s.send(q.to_command())
+                    q.create_unregister(temporary_token)
+                    s.send(q.to_command())
+                    s.close()
+                except Exception:
+                    error = True
+                    errors.append(('flash', 'Connection to device failed.'))
         else:
                 error = True
                 errors.append(('device', 'Device does not exist.'))
