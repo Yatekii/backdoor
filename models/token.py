@@ -98,13 +98,8 @@ class Token(Base):
     def flash(sqlsession, token, device):
         error = False
         errors = []
-        token = None
-        device = None
-
-        if type(token) == int:
-            token = sqlsession.query(models.Token).filter_by(id=token).first()
-        if type(device) == int:
-            device = sqlsession.query(models.Device).filter_by(id=device).first()
+        token = sqlsession.query(models.Token).filter_by(id=token).first()
+        device = sqlsession.query(models.Device).filter_by(id=device).first()
 
         if device:
             if token:

@@ -83,6 +83,21 @@ class Query:
         self.query['auth']['token'] = auth_token
         self.query['cmd']['method'] = 'UNREGISTER'
 
+    def create_unknown_token(self, auth_token, token):
+        self.query['auth']['token'] = auth_token
+        self.query['cmd']['method'] = 'UNKNOWN'
+        self.query['cmd']['params'] = [token]
+
+    def create_deactivated_device(self, auth_token, token):
+        self.query['auth']['token'] = auth_token
+        self.query['cmd']['method'] = 'DEACTIVATED'
+        self.query['cmd']['params'] = [token]
+
+    def create_kick(self, auth_token, token):
+        self.query['auth']['token'] = auth_token
+        self.query['cmd']['method'] = 'KICK'
+        self.query['cmd']['params'] = [token]
+
     def create_open(self, auth_token, device_token=None):
         self.query['auth']['token'] = auth_token
         self.query['cmd']['method'] = 'OPEN'

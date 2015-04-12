@@ -72,7 +72,9 @@ def add(sqlsession):
         device = models.Device(
             name=request.form['add_device_name'],
             pubkey=request.form['add_device_pubkey'],
-            creation_date=helpers.today()
+            creation_date=helpers.today(),
+            is_online=False,
+            is_enabled=True
         )
         sqlsession.add(device)
         sqlsession.commit()
@@ -114,11 +116,57 @@ def change(sqlsession):
 
     if not device:
         error = True
-        flash('Device with id %d was not found.' % request.form['change_device_id'], 'danger')
+        flash('Device with id %s was not found.' % request.form['change_device_id'], 'danger')
+
+    if device.is_online:
+        error = True
+        flash('Device with id %s is still online. Please make sure it\'s offline to make changes.'
+              % request.form['change_device_id'], 'danger')
 
     if not error:
         device.name = request.form['change_device_name']
         device.pubkey = request.form['change_device_pubkey']
         flash('Device with id %d has been changed.' % device.id, 'success')
+
+    return redirect(url_for('device.view', id=device.id))
+
+@blueprint.route('/revoke', methods=['POST'])
+@check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_DEVICES)
+@helpers.handle_dbsession()
+def revoke(sqlsession):
+    error = False
+    device = sqlsession.query(models.Device).filter_by(id=int(request.form.get('change_device_id'))).first()
+    print(int(request.form.get('change_device_id')))
+    if not device:
+        error = True
+        flash('Device with id %s was not found.' % request.form['change_device_id'], 'danger')
+
+    if not error:
+        error, errors = models.Device.revoke(device.id)
+        if error:
+            for e in errors:
+                flash(e[1], 'danger')
+        else:
+            device.is_enabled = False
+            flash('Device with id %d has been revoked.' % device.id, 'success')
+
+    return redirect(url_for('device.view', id=device.id))
+
+@blueprint.route('/enable', methods=['POST'])
+@check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_DEVICES)
+@helpers.handle_dbsession()
+def enable(sqlsession):
+    error = False
+    device = sqlsession.query(models.Device).filter_by(id=request.form.get('change_device_id')).first()
+
+    if not device:
+        error = True
+        flash('Device with id %s was not found.' % request.form['change_device_id'], 'danger')
+
+    if not error:
+        device.is_enabled = True
+        flash('Device with id %d has been enabled.' % device.id, 'success')
 
     return redirect(url_for('device.view', id=device.id))

@@ -95,7 +95,7 @@ class Backdoor:
         self.logger.debug(query.query)
         if query.method == 'ACCESS':
             token = session.query(Token).filter_by(value=query.params[0]).first()
-            device = session.query(Device).filter_by(pubkey_device=query.token).first()
+            device = session.query(Device).filter_by(pubkey=query.token).first()
             if len(query.params) == 1:
                 if token in device.tokens and token.expiry_date >= helpers.today():
                     response.create_grant(config.server_token, query.params[0])
@@ -130,10 +130,24 @@ class Backdoor:
                 if query.token in self.connection_manager.webuis:
                     response.create_open(config.server_token)
                     self.issue_query(query.params[0], response)
-                    self.logger.debug('Sent OPEN to device with token %s.' % query.params[0])
+                    device_to_open = session.query(Device).filter_by(pubkey=query.params[0]).first()
+                    self.logger.debug('Sent OPEN to device %s.' % device_to_open.name)
                 else:
                     self.logger.info('Requested flash came from a non webui or an unregistered one. It was discarded.')
             self.logger.debug('Broken query. Expected exactly 1 parameter.')
+
+        elif query.method == 'KICK':
+            if len(query.params) == 1:
+                if query.token in self.connection_manager.webuis:
+                    device_to_kick = session.query(Device).filter_by(pubkey=query.params[0]).first()
+                    if device_to_kick and device_to_kick.is_online:
+                        self.connection_manager.devices[device_to_kick.pubkey].shutdown()
+                    self.logger.debug('Kicked device %s.' % device_to_kick.name)
+                else:
+                    self.logger.info('Requested kick came from a non webui or an unregistered one. It was discarded.')
+            else:
+                self.logger.debug('Broken query. Expected exactly 1 parameter.')
+
 
 bd = Backdoor()
 bd.run()

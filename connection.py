@@ -56,6 +56,8 @@ class Connection(Thread):
             del self.parent.webuis[self.other]
         elif self.other in self.parent.devices:
             del self.parent.devices[self.other]
+        if self.other in self.parent.connections:
+            self.parent.connections.remove(self.other)
 
         while True:
             try:
@@ -100,32 +102,49 @@ class Connection(Thread):
         except queue.Empty:
             pass
         except Exception as e:
-            self.logger.exception('Caught exception in thread (%s, %d) whilst trying to send query:' % (self.address[0], self.address[1]))
+            self.logger.exception('Caught exception in connection thread (%s, %d) whilst trying to send query:'
+                                  % (self.address[0], self.address[1]))
             self.logger.exception(query.query)
             self.logger.exception(e)
 
     def query_register(self, cmd, session):
-        device_requesting = session.query(Device).filter_by(pubkey=cmd.token)
+        device_requesting = session.query(Device).filter_by(pubkey=cmd.token).first()
         if device_requesting:
-            self.parent.devices[cmd.token] = self
-            self.other = cmd.token
-            self.type = 'device'
-            self.logger.info('Registered new device with token %s.' % cmd.token)
+            if device_requesting.is_enabled:
+                self.parent.devices[cmd.token] = self
+                self.other = cmd.token
+                self.type = 'device'
+                device_requesting.is_online = True
+                self.logger.info('Registered new device %s.' % device_requesting.name)
+            else:
+                query = Query()
+                query.create_deactivated_device(config.server_token, cmd.token)
+                self.connection.sendall(query.to_command())
+                self.logger.info('Disabled device %s tried to register and was rejected.' % device_requesting.name)
+                return self.shutdown()
         else:
+            query = Query()
+            query.create_unknown_token(config.server_token, cmd.token)
+            self.connection.sendall(query.to_command())
             self.logger.info('Unknown token %s tried to register and was rejected.' % cmd.token)
+            return self.shutdown()
 
     def query_register_webui(self, cmd):
         if cmd.token == config.webui_token:
             self.parent.webuis[cmd.params[0]] = self
             self.other = cmd.token
             self.type = 'webui'
-            self.logger.info('Registered new webui with token %s.' % cmd.params[0])
+            self.logger.info('Registered new webui with token %s in connection thread (%s, %d).'
+                             % (cmd.params[0], self.address[0], self.address[1]))
         else:
             self.logger.info('Unknown token %s tried to register as webui and was rejected.' % cmd.token)
+            return self.shutdown()
 
-    def query_unregister(self, cmd):
+    def query_unregister(self, cmd, session):
         if cmd.token == self.other:
-            self.logger.info('%s just unregistered. Shutting down.' % self.other)
+            device_requesting = session.query(Device).filter_by(pubkey=cmd.token).first()
+            self.logger.info('%s just unregistered. Shutting down.' % device_requesting.name)
+            device_requesting.is_online = False
             return self.shutdown()
 
     def query_pong(self, cmd):
@@ -147,7 +166,7 @@ class Connection(Thread):
                         self.query_register_webui(cmd)
 
                     elif cmd.method == 'UNREGISTER':
-                        self.query_unregister(cmd)
+                        self.query_unregister(cmd, session)
 
                     elif cmd.method == 'PONG':
                         self.query_pong(cmd)

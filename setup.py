@@ -25,6 +25,7 @@ import hashlib
 
 import config
 import models
+import datetime
 
 engine = create_engine(config.db, echo=config.sql_debug)
 models.base.Base.metadata.drop_all(engine)
@@ -33,7 +34,7 @@ models.base.Base.metadata.create_all(engine)
 session_factory = sessionmaker(bind=engine)
 s = session_factory()
 password = hashlib.sha256(b'1')
-u = models.User(
+u1 = models.User(
     username='yatekii',
     password=password.hexdigest(),
     level=9999,
@@ -41,7 +42,49 @@ u = models.User(
     email='noah@bastli.ch',
     nethzid='nhuesser'
 )
-s.add(u)
+s.add(u1)
+password = hashlib.sha256(b'2')
+u2 = models.User(
+    username='tiwalun',
+    password=password.hexdigest(),
+    level=9999,
+    name='Dominik Boehi',
+    email='dominik@bastli.ch',
+    nethzid='dboehi'
+)
+s.add(u2)
+d = models.Device(
+            name='Der Testgeraet',
+            pubkey='alfonso',
+            creation_date=datetime.date.today(),
+            is_online=False,
+            is_enabled=True
+        )
+s.add(d)
+data = '2015-12-01'.split('-')
+date = datetime.date(int(data[0]), int(data[1]), int(data[2]))
+t = models.Token(
+            name='Testtoken Yatekii',
+            value='migros',
+            description='Bla',
+            owner=u1,
+            flashed=False,
+            expiry_date=date,
+            creation_date=datetime.date.today()
+            )
+d.tokens.append(t)
+s.add(t)
+t = models.Token(
+            name='Testtoken Tiwalun',
+            value='random',
+            description='Blo',
+            owner=u2,
+            flashed=False,
+            expiry_date=date,
+            creation_date=datetime.date.today()
+            )
+d.tokens.append(t)
+s.add(t)
 s.commit()
 s.close()
 
