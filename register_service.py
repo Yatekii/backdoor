@@ -22,7 +22,7 @@ def check_condition(value, condition, type):
 
 
 @helpers.handle_dbsession()
-def register_service(sqlsession, name, desc, fields):
+def prepare_service_db(sqlsession, name, desc, fields):
     # fields = (key, description, type, condition, choices = (c_value, c_description)
     m_string = ''
     f = []
@@ -48,15 +48,24 @@ def register_service(sqlsession, name, desc, fields):
     s = Service(name=name, fields=f)
     sqlsession.add(s)
     sqlsession.commit()
-    print('Successfully registered new service %s: %s' % (name, desc))
+    print('Successfully prepared DB new service %s: %s' % (name, desc))
     print('%s the following fields:' % name)
     print(m_string)
     return True
 
 
+def register_service(path):
+    print('Importing service from %s.' % path)
+
+    if prepare_service_db():
+        pass
+
+
+
 if __name__ == "__main__":
-    register_service('basics', 'Basic services and commands', (
-        ('text', 'txt', Type.text, '.', (('2345', 'adsd'), ('2345', 'adsd'), ('2345', 'adsd'))),
-        ('int', 'd', Type.int, '', ()),
-        ('bool', 'truefalse', Type.bool, '', ())
-    ))
+    pass
+    # prepare_service_db('basics', 'Basic services and commands', (
+    #     ('text', 'txt', Type.text, '.', (('2345', 'adsd'), ('2345', 'adsd'), ('2345', 'adsd'))),
+    #     ('int', 'd', Type.int, '', ()),
+    #     ('bool', 'truefalse', Type.bool, '', ())
+    # ))

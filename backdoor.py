@@ -126,6 +126,7 @@ class Backdoor:
     def handle_query(self, query):
         self.logger.debug('Handle query:')
         self.logger.debug(query.query)
+        print(self.methods)
         if query.method in self.methods:
             self.methods[query.method](self, query)
         else:

@@ -5,7 +5,7 @@ from models import Token, Device
 
 
 __service_name__ = 'basics'
-__fields__ = ''
+__fields__ = None
 
 
 @helpers.handle_dbsession()
@@ -77,9 +77,5 @@ def query_kick(sqlsession, backdoor, query):
 
 __methods__ = {
     'ACCESS':   (query_access, 'sent from a device to request access'),
-    'FLASH':    (query_flash, 'sent from a webui to request the flashing of a token on a certain device\
-                                \nsent from the server to request the flashing of a token on a certain device'),
-    'FLASHED':  (query_flashed, 'issued from a device if it successfully flashed a token'),
-    'OPEN':     (query_open, 'request to open a door'),
     'KICK':     (query_kick, 'force disconnect a specified device')
 }
