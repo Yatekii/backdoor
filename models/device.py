@@ -8,8 +8,13 @@ import config
 from query import Query
 
 
-token_device_table = Table('association', Base.metadata,
+token_device_table = Table('token_device_table', Base.metadata,
     Column('token_id', Integer, ForeignKey('tokens.id')),
+    Column('device_id', Integer, ForeignKey('devices.id'))
+)
+
+service_device_table = Table('service_device_table', Base.metadata,
+    Column('service_id', Integer, ForeignKey('services.id')),
     Column('device_id', Integer, ForeignKey('devices.id'))
 )
 
@@ -23,9 +28,11 @@ class Device(Base):
     description = Column(String)
     pubkey = Column(String)
     tokens = relationship('Token', secondary=token_device_table, backref='devices')
+    services = relationship('Service', secondary=service_device_table, backref='devices')
     used_by_default_by = relationship('User', backref='default_device')
     is_online = Column(Boolean)
     is_enabled = Column(Boolean)
+    data = relationship('ServiceData', lazy='dynamic', backref='device')
 
     @helpers.handle_dbsession()
     def revoke(sqlsession, device):

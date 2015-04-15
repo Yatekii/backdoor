@@ -25,7 +25,7 @@ import logging
 
 
 class Query:
-    def __init__(self, token=None, method=None, params=None):
+    def __init__(self, token=None, method=None, service=None, params=None):
         self.logger = logging.getLogger('backdoor')
         self.query = {
             'auth': {
@@ -34,6 +34,7 @@ class Query:
             },
             'cmd': {
                 'method': method,
+                'service': service,
                 'params': params
             }
         }

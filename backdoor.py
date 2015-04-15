@@ -22,6 +22,10 @@
 import queue
 import signal
 import logging
+import importlib
+
+import models
+import services
 
 from connection_manager import ConnectionManager
 import config
@@ -51,6 +55,9 @@ class Backdoor:
         self.running = True
         self.connection_manager = ConnectionManager(config.api_host, config.api_port)
         self.connection_manager.start()
+        self.methods = {}
+        self.services = []
+        self.load_services()
 
     def run(self):
         while self.running:
@@ -83,71 +90,46 @@ class Backdoor:
             self.logger.info('Device or webui with token %s is not registered. Request was discarded:' % device)
             self.logger.info(query.query)
 
-    def open(self, device):
-        query = Query()
-        query.create_open(config.server_token)
-        self.issue_query(device, query)
+    def add_method(self, service, name, fn):
+        self.methods['%s_%s' % (service, name)] = fn
+        self.logger.info('Loaded method %s: %s' % ('%s_%s' % (service, name), fn[1]))
 
     @helpers.handle_dbsession()
-    def handle_query(session, self, query):
-        response = Query()
+    def load_services(sqlsession, self):
+        s = sqlsession.query(models.Service).filter_by().all()
+        i = 0
+        for service in s:
+            self.logger.info('Loading service %s' % service.name)
+            self.load_service(service.name)
+            self.services.append(service.name)
+            i += 1
+            self.logger.info('Finished loading service %s' % service.name)
+
+        self.logger.info('Loaded %d modules' % i if i != 1 else 'Loaded 1 module')
+
+    def load_service(self, service):
+        if service not in self.services:
+            try:
+                m = importlib.import_module('.' + service, 'services')
+                for ability in m.__methods__:
+                    self.add_method(service, ability, m.__methods__[ability])
+            except Exception as e:
+                self.logger.info('Failed to load service %s due to a faulty module' % service)
+                self.logger.info(e)
+                self.stop()
+                return False
+        else:
+            self.logger.info('Tried to load an unregistered service %s. Skipping' % service)
+            return False
+        return False
+
+    def handle_query(self, query):
         self.logger.debug('Handle query:')
         self.logger.debug(query.query)
-        if query.method == 'ACCESS':
-            token = session.query(Token).filter_by(value=query.params[0]).first()
-            device = session.query(Device).filter_by(pubkey=query.token).first()
-            if len(query.params) == 1:
-                if token in device.tokens and token.expiry_date >= helpers.today():
-                    response.create_grant(config.server_token, query.params[0])
-                    self.logger.info('Granted access to token %s at device %s' % (query.params[0], query.token))
-                else:
-                    response.create_deny(config.server_token, query.params[0])
-                    self.logger.info('Denied access to token %s at device %s' % (query.params[0], query.token))
-
-                self.issue_query(query.token, response)
-            else:
-                self.logger.debug('Broken query. Expected exactly 1 parameter.')
-
-        elif query.method == 'FLASH':
-            self.logger.info('Requested flash of token %s at device %s' % (query.params[0], query.params[1]))
-            if len(query.params) == 2:
-                if query.token in self.connection_manager.webuis:
-                    response.create_flash(config.server_token, query.params[0])
-                    self.issue_query(query.params[1], response)
-                else:
-                    self.logger.info('Requested flash came from a non webui or an unregistered one. It was discarded.')
-            else:
-                self.logger.debug('Broken query. Expected exactly 2 parameters.')
-
-        elif query.method == 'FLASHED':
-            if len(query.params) == 1:
-                session.query(Token).filter_by(value=query.params[0]).first().flashed = True
-                self.logger.debug('Token %s was flashed' % query.params[0])
-            self.logger.debug('Broken query. Expected exactly 1 parameter.')
-
-        elif query.method == 'OPEN':
-            if len(query.params) == 1:
-                if query.token in self.connection_manager.webuis:
-                    response.create_open(config.server_token)
-                    self.issue_query(query.params[0], response)
-                    device_to_open = session.query(Device).filter_by(pubkey=query.params[0]).first()
-                    self.logger.debug('Sent OPEN to device %s.' % device_to_open.name)
-                else:
-                    self.logger.info('Requested flash came from a non webui or an unregistered one. It was discarded.')
-            self.logger.debug('Broken query. Expected exactly 1 parameter.')
-
-        elif query.method == 'KICK':
-            if len(query.params) == 1:
-                if query.token in self.connection_manager.webuis:
-                    device_to_kick = session.query(Device).filter_by(pubkey=query.params[0]).first()
-                    if device_to_kick and device_to_kick.is_online:
-                        self.connection_manager.devices[device_to_kick.pubkey].shutdown()
-                    self.logger.debug('Kicked device %s.' % device_to_kick.name)
-                else:
-                    self.logger.info('Requested kick came from a non webui or an unregistered one. It was discarded.')
-            else:
-                self.logger.debug('Broken query. Expected exactly 1 parameter.')
-
+        if query.method in self.methods:
+            self.methods[query.method](self, query)
+        else:
+            self.logger.debug('Broken query. Unknown method: %s.' % query.method)
 
 bd = Backdoor()
 bd.run()

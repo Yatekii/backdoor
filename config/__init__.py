@@ -6,9 +6,11 @@ webui_host = '127.0.0.1'
 webui_port = 8001
 
 api_host = 'backdoor.yatekii.ch'
-api_port = 8005
+api_port = 8003
 
 server_debug = True
+
+service_path = 'services/'
 
 db = 'sqlite:///db.sqlite'
 sql_debug = False

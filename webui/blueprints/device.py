@@ -27,6 +27,7 @@ from flask import request
 
 
 from flask import Blueprint
+from sqlalchemy import and_
 
 
 import helpers
@@ -49,6 +50,10 @@ def view(sqlsession, id):
     if id > 0:
         device = sqlsession.query(models.Device).filter_by(id=id).first()
     devices = sqlsession.query(models.Device).filter_by().all()
+    s = sqlsession.query(models.Service).filter_by().all()
+    services = []
+    for service in s:
+        services.append((service, device in service.devices))
 
     return render_template(
         'device.html',
@@ -57,6 +62,7 @@ def view(sqlsession, id):
         id=id,
         device=device,
         devices=devices,
+        services=services,
         previous=dict(request.args.items(multi=False))
     )
 
@@ -167,5 +173,57 @@ def enable(sqlsession):
     if not error:
         device.is_enabled = True
         flash('Device with id %d has been enabled.' % device.id, 'success')
+
+    return redirect(url_for('device.view', id=device.id))
+
+
+@blueprint.route('/change_service', methods=['POST'])
+@check_session()
+@check_rights(OVER_NINETHOUSAND | MANIPULATE_DEVICES)
+@helpers.handle_dbsession()
+def change_service(sqlsession):
+    error = False
+    device = sqlsession.query(models.Device).filter_by(id=request.form.get('device_id')).first()
+    service = sqlsession.query(models.Service).filter_by(id=request.form.get('service_id')).first()
+
+
+    if not device:
+        error = True
+        flash('Device with id %s was not found.' % request.form['device_id'], 'danger')
+
+    if not service:
+        error = True
+        flash('Service with id %s was not found.' % request.form['service_id'], 'danger')
+
+    if not error:
+        if request.form.get('add_service'):
+            if service not in device.services:
+                device.services.append(service)
+                users = sqlsession.query(models.User).filter(
+                    and_(
+                        ~models.User.data.any(service=service),
+                        models.User.tokens.any(models.Token.devices.any(models.Device.services.contains(service)))
+                    )
+                ).all()
+                print(users)
+                for user in users:
+                    if user.data is None:
+                        user.data = []
+                    for field in service.fields:
+                        user.data.append(models.ServiceData(key=field.key, user=user, device=device, service=service))
+                flash('Service %s has been added to device %s.' % (service.name, device.name), 'success')
+            else:
+                flash('Service is already activated. No need to activate it.', 'danger')
+
+        elif request.form.get('remove_service'):
+            if service in device.services:
+                device.services.remove(service)
+                flash('Service %s has been removed from device %s.' % (service.name, device.name), 'success')
+            else:
+                flash('Service is not activated. No need to remove it.', 'danger')
+
+        elif request.form.get('purge_service'):
+            sqlsession.query(models.ServiceData).filter_by(service=service).delete()
+            flash('Data for service %s has been purged.' % service.name, 'success')
 
     return redirect(url_for('device.view', id=device.id))

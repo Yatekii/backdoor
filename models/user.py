@@ -23,6 +23,7 @@ class User(Base):
     welcome_sound = Column(String)
     default_device_id = Column(Integer, ForeignKey('devices.id'))
     tokens = relationship('Token', lazy='dynamic', backref='owner', cascade='all, delete-orphan')
+    data = relationship('ServiceData', lazy='dynamic', backref='user')
 
 
     @helpers.handle_dbsession()
