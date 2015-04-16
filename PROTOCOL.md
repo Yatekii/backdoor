@@ -3,9 +3,16 @@
 The protocol is based on JSON messages, which are sent over TCP. A newline charachter (\n) is used to delimit
 the end of a message.
 
-## Messages
+## BASE MESSAGE
 
-The following is a list of all messages.
+    {"auth": {"token": <TOKEN>, "time": <TIMESTAMP>}, "cmd": {"method": <CMD>, "service": <SERVICE>, "params": <PARAMS>}}
+
+<TOKEN> is your token to authenticate yourself.
+<TIMESTAMP> is the current unix time
+<CMD> is the preferred command to be executed
+<SERVICE> the service to whose featureset <CMD> belongs
+<PARAMS> is a list of all additional params required for <CMD>
+
 
 ### REGISTER
 

@@ -1,2 +1,0 @@
-unregistering devices (also when deleting a device!)
-shutdown bug
