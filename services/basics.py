@@ -5,7 +5,8 @@ from models import Token, Device
 
 
 __service_name__ = 'basics'
-__fields__ = None
+__description__ = 'Provides basic commands to authenticate and establish/quit connections'
+__fields__ = ()
 
 
 @helpers.handle_dbsession()
