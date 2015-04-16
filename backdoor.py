@@ -110,7 +110,7 @@ class Backdoor:
     def load_service(self, service):
         if service not in self.services:
             try:
-                m = importlib.import_module('.' + service, 'services')
+                m = importlib.import_module('.%s' % service, 'services')
                 for ability in m.__methods__:
                     self.add_method(service, ability, m.__methods__[ability])
             except Exception as e:
@@ -119,9 +119,9 @@ class Backdoor:
                 self.stop()
                 return False
         else:
-            self.logger.info('Tried to load an unregistered service %s. Skipping' % service)
+            self.logger.info('Tried to load a yet registered service %s. Skipping' % service)
             return False
-        return False
+        return True
 
     def handle_query(self, query):
         self.logger.debug('Handle query:')

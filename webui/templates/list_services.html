@@ -1,0 +1,11 @@
+{% if active != 'search' %}
+    <!--<li {% if id == 0 %} class="active" {% endif %}><a href="{{ url_for('service.view') }}">Add Device</a></li>-->
+    {% for service in services %}
+        <li {% if id == service.id %} class="active" {% endif %}><a href="{{ url_for('service_' ~ service.name ~ '.view', id=service.id) }}">{{ service.name }}</a></li>
+    {% endfor %}
+{% else %}
+    <li style="background-color: #EEEEEE;"><a style="color: #333333;" href="{{ url_for('service.view') }}">Services</a></li>
+    {% for service in services %}
+        <li {% if (not type or type == 'service') and id == service.id %} class="active" {% endif %}><a href="{{ url_for('search.search', q=q, type='service', id=service.id) }}">{{ service.name }}</a></li>
+    {% endfor %}
+{% endif %}

@@ -64,7 +64,7 @@ def check_rights(flag):
         @helpers.handle_dbsession()
         def inner(sqlsession, *args, **kwargs):
             level = sqlsession.query(models.User).filter_by(id=session['id']).first().level
-            if level & flag > 0:
+            if (level & flag) > 0 or flag == 0:
                 return f(*args, **kwargs)
             else:
                 return redirect(url_for('authentication.forbidden'))

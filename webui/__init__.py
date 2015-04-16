@@ -20,6 +20,8 @@
 
 
 import datetime
+import importlib
+import traceback
 
 
 from flask import Flask
@@ -35,12 +37,18 @@ from webui.blueprints import user
 from webui.blueprints import token
 from webui.blueprints import device
 from webui.blueprints import settings
+from webui.blueprints import service
 from webui.blueprints import profile
 
 
 from webui.wrappers import check_secret
 import config
 import helpers
+import models
+import services
+
+
+blueprints = []
 
 
 app = Flask(__name__)
@@ -54,7 +62,36 @@ app.register_blueprint(user.blueprint, url_prefix='/user')
 app.register_blueprint(token.blueprint, url_prefix='/token')
 app.register_blueprint(device.blueprint, url_prefix='/device')
 app.register_blueprint(settings.blueprint, url_prefix='/settings')
+app.register_blueprint(service.blueprint, url_prefix='/service')
 app.register_blueprint(profile.blueprint, url_prefix='/profile')
+
+@helpers.handle_dbsession()
+def load_blueprints(sqlsession, app):
+    s = sqlsession.query(models.Service).filter_by().all()
+    i = 0
+    for service in s:
+        print('Loading blueprint for service %s' % service.name)
+        if load_blueprint(service.name, app):
+            blueprints.append(service.name)
+            i += 1
+            print('Finished loading blueprint for service %s' % service.name)
+
+    print('Loaded %d blueprints' % i if i != 1 else 'Loaded 1 blueprint.')
+
+def load_blueprint(service, app):
+    if service not in blueprints:
+        try:
+            p = importlib.import_module('.%s' % service, 'services')
+            m = importlib.import_module('.blueprint', 'services.%s' % service)
+            app.register_blueprint(m.__blueprint__, url_prefix='/service_%s' % service)
+        except Exception as e:
+            print('Failed to load service blueprint %s due to a faulty blueprint' % service)
+            print(e)
+            return False
+    else:
+        print('Tried to load a yet loaded blueprint for service %s. Skipping' % service)
+        return False
+    return True
 
 # print(app.url_map)
 

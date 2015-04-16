@@ -48,6 +48,7 @@
                 <li {% if active == 'logs' %} class="active" {% endif %}><a href="#">Logs</a></li>
                 <li {% if active == 'settings' %} class="active" {% endif %}><a href="{{ url_for('settings.general') }}">Settings</a></li>
                 <li {% if active == 'profile' %} class="active" {% endif %}><a href="{{ url_for('profile.general') }}">Profile</a></li>
+                <li {% if active == 'service' %} class="active" {% endif %}><a href="{{ url_for('service.view') }}">Services</a></li>
                 <li><a href="{{ url_for('authentication.logout') }}">Logout</a></li>
             </ul>
         </div>

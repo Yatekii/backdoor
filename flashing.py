@@ -5,7 +5,8 @@ from models import Token
 
 
 __service_name__ = 'flashing'
-__fields__ = None
+__description__ = 'Basic token flashing service'
+__fields__ = ()
 
 
 def query_flash(backdoor, query):

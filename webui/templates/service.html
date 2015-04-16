@@ -1,0 +1,13 @@
+{% extends "layout_admin.html" %}
+
+{% block navi %}
+    {% include "list_services.html" %}
+{% endblock %}
+
+{% block body %}
+    {% if id == 0 %}
+        Choose a service from the left!
+    {% else %}
+        {% include "edit_service.html" %}
+    {% endif %}
+{% endblock %}

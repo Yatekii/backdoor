@@ -19,15 +19,30 @@
 """
 
 
-import webui
-import config
+from flask import flash
+from flask import render_template
+from flask import url_for
+from flask import redirect
+from flask import request
+from flask import Blueprint
 
-if __name__ == '__main__':
-    webui.load_blueprints(webui.app)
-    app = webui.app.run(
-        host=config.webui_host,
-        port=config.webui_port,
-        debug=config.server_debug,
-        use_evalex=False,
-        threaded=True
+
+import helpers
+import models
+from webui.wrappers import check_session, check_rights
+from webui.permission_flags import *
+
+__blueprint__ = Blueprint('service_lock', __name__, template_folder='templates')
+
+
+@__blueprint__.route('/view')
+@__blueprint__.route('/view', methods=['POST', 'GET'])
+@check_session()
+@check_rights(0)
+@helpers.handle_dbsession()
+def view(sqlsession, id):
+    active = 'service'
+    return render_template(
+        'main.html',
+        active=active
     )
