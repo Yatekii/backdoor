@@ -32,17 +32,24 @@ import models
 from webui.wrappers import check_session, check_rights
 from webui.permission_flags import *
 
-__blueprint__ = Blueprint('service_lock', __name__, template_folder='templates')
+__blueprint__ = Blueprint('service_flashing', __name__, template_folder='templates')
 
 
-@__blueprint__.route('/view')
-@__blueprint__.route('/view', methods=['POST', 'GET'])
+@__blueprint__.route('/view', defaults={'id': '0'})
+@__blueprint__.route('/view/<id>', methods=['POST', 'GET'])
 @check_session()
 @check_rights(0)
 @helpers.handle_dbsession()
 def view(sqlsession, id):
     active = 'service'
+    id = int(id)
+
+    services = sqlsession.query(models.Service).filter_by(uses_blueprint=True).order_by(models.Service.name.asc()).all()
+    service = sqlsession.query(models.Service).filter_by(id=id).first()
     return render_template(
         'main.html',
-        active=active
+        active=active,
+        id=id,
+        service=service,
+        services=services
     )

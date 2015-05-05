@@ -44,7 +44,7 @@ def view(sqlsession, id):
     active = 'service'
     id = int(id)
 
-    services = sqlsession.query(models.Service).filter_by().order_by(models.Service.name.asc()).all()
+    services = sqlsession.query(models.Service).filter_by(uses_blueprint=True).order_by(models.Service.name.asc()).all()
     service = sqlsession.query(models.Service).filter_by(id=id).first()
     return render_template(
         'service.html',

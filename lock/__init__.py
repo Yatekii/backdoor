@@ -8,6 +8,7 @@ from models import Type
 __service_name__ = 'lock'
 __description__ = 'A doormanager which can play a welcome sound.'
 __fields__ = (('path', 'path to a sound file', Type.text, '.', ()), )
+__uses_blueprint__ = True
 
 
 @helpers.handle_dbsession()

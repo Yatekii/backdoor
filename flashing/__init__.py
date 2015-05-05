@@ -7,6 +7,7 @@ from models import Token
 __service_name__ = 'flashing'
 __description__ = 'Basic token flashing service'
 __fields__ = ()
+__uses_blueprint__ = True
 
 
 def query_flash(backdoor, query):

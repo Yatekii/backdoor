@@ -8,6 +8,7 @@
     {% if id == 0 %}
         Choose a service from the left!
     {% else %}
-        {% include "edit_service.html" %}
+        {% block service %}
+        {% endblock %}
     {% endif %}
 {% endblock %}

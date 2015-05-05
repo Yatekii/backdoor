@@ -79,6 +79,7 @@ def load_blueprints(sqlsession, app):
     print('Loaded %d blueprints' % i if i != 1 else 'Loaded 1 blueprint.')
 
 def load_blueprint(service, app):
+    print(blueprints)
     if service not in blueprints:
         try:
             p = importlib.import_module('.%s' % service, 'services')
