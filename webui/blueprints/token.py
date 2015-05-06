@@ -77,9 +77,9 @@ def add(sqlsession):
         for e in errors:
             flash(e[1], 'danger')
         return redirect(url_for(
-            'tokens',
+            'token.view',
             token_owner_id=request.form['add_token_owner_id'],
-            token_owner=request.form['add_token_owner'],
+            token_owner_name=request.form['add_token_owner'],
             token_expiry_date=request.form['add_token_expiry_date']
         ))
 
