@@ -41,15 +41,18 @@
                 <input class="form-control search_typeahead" placeholder="Search..." type="text" name="q">
             </form>
             <ul class="nav navbar-nav navbar-right">
+            {% if session['id'] is defined %}
                 <li {% if active == 'users' %} class="active" {% endif %}><a href="{{ url_for('user.view') }}">Users</a></li>
                 <li {% if active == 'tokens' %} class="active" {% endif %}><a href="{{ url_for('token.view') }}">Tokens</a></li>
                 <li {% if active == 'devices' %} class="active" {% endif %}><a href="{{ url_for('device.view') }}">Devices</a></li>
-                <li {% if active == 'sounds' %} class="active" {% endif %}><a href="#">Sounds</a></li>
-                <li {% if active == 'logs' %} class="active" {% endif %}><a href="#">Logs</a></li>
+                <li {% if active == 'logs' %} class="active" {% endif %}><a href="#">Logs(soonTM)</a></li>
                 <li {% if active == 'settings' %} class="active" {% endif %}><a href="{{ url_for('settings.general') }}">Settings</a></li>
                 <li {% if active == 'profile' %} class="active" {% endif %}><a href="{{ url_for('profile.general') }}">Profile</a></li>
                 <li {% if active == 'service' %} class="active" {% endif %}><a href="{{ url_for('service.view') }}">Services</a></li>
                 <li><a href="{{ url_for('authentication.logout') }}">Logout</a></li>
+            {% else %}
+                <li><a href="{{ url_for('authentication.login') }}">Login</a></li>
+            {% endif %}
             </ul>
         </div>
     </div>

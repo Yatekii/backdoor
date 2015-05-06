@@ -2,12 +2,12 @@
 {% block content %}
     <div class="col-xs-12 main">
         {% for category, message in get_flashed_messages(with_categories=true) %}
-            <div class="alert alert-{{ category }} col-lg-12" role="alert"><strong>{{ message }}</strong></div>
+            <center><div  style="width: 400px;" class="alert alert-{{ category }} col-lg-12" role="alert"><strong>{{ message }}</strong></div></center>
         {% endfor %}
         <form method="POST">
-            <input type="text" name="username" class="form-control" />
-            <input type="password" name="password" class="form-control" />
-            <input type="submit" name="username" class="form-control btn-success" />
+            <center><input type="text" name="username" placeholder="User" style="width: 300px;" class="form-control" /></center>
+            <center><input type="password" name="password" placeholder="Password" style="width: 300px;" class="form-control" /></center>
+            <center><input type="submit" name="username"  style="width: 300px;" class="form-control btn-success" value="Login"/></center>
         </form>
     </div>
 {% endblock %}

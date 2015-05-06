@@ -24,6 +24,7 @@ from flask import redirect
 from flask import abort
 from flask import request
 from flask import session
+from flask import flash
 
 
 import config
@@ -53,7 +54,8 @@ def check_session():
                     and sqlsession.query(models.User).filter_by(username=session['username']).count() == 1:
                 return f(*args, **kwargs)
             else:
-                return redirect(url_for('authentication.logout'))
+                flash('Sorry, you are not logged in. Please login first.')
+                return redirect(url_for('authentication.login'))
         return inner
     return checker_helper
 
