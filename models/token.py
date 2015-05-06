@@ -41,8 +41,10 @@ class Token(Base):
                         if owner_query.count() == 1:
                             owner = owner_query.first()
                         else:
+                            error = True
                             errors.append(('owner', 'User was not found.'))
                     else:
+                        error = True
                         errors.append(('owner', 'User was not found.'))
 
             elif attribute == 'expiry_date':
