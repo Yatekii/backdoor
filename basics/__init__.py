@@ -1,7 +1,7 @@
 import helpers
 from query import Query
 import config
-from models import Token, Device
+from models import Token, Device, User
 
 
 __service_name__ = 'basics'
@@ -13,9 +13,9 @@ __uses_blueprint__ = False
 @helpers.handle_dbsession()
 def query_access(sqlsession, backdoor, query):
     response = Query(service=__service_name__)
-    token = sqlsession.query(Token).filter_by(value=query.params[0]).first()
-    device = sqlsession.query(Device).filter_by(pubkey=query.token).first()
     if len(query.params) == 1:
+        token = sqlsession.query(Token).filter_by(value=query.params[0]).first()
+        device = sqlsession.query(Device).filter_by(pubkey=query.token).first()
         if token in device.tokens and token.expiry_date >= helpers.today():
             response.create_grant(config.server_token, query.params[0])
             backdoor.logger.info('Granted access to token %s at device %s' % (query.params[0], query.token))
@@ -28,39 +28,22 @@ def query_access(sqlsession, backdoor, query):
         backdoor.logger.debug('Broken query. Expected exactly 1 parameter.')
 
 
-def query_flash(backdoor, query):
+@helpers.handle_dbsession()
+def query_info(sqlsession, backdoor, query):
     response = Query(service=__service_name__)
-    backdoor.logger.info('Requested flash of token %s at device %s' % (query.params[0], query.params[1]))
-    if len(query.params) == 2:
-        if query.token in backdoor.connection_manager.webuis:
-            response.create_flash(config.server_token, query.params[0])
-            backdoor.issue_query(query.params[1], response)
+    if len(query.params) == 1:
+        token = sqlsession.query(Token).filter_by(value=query.params[0]).first()
+        device = sqlsession.query(Device).filter_by(pubkey=query.token).first()
+        if token in device.tokens and token.expiry_date >= helpers.today():
+            response.create_info(config.server_token, query.params[0], token.user)
+            backdoor.logger.info('Granted info for token %s to device %s' % (query.params[0], query.token))
         else:
-            backdoor.logger.info('Requested flash came from a non webui or an unregistered one. It was discarded.')
+            response.create_info(config.server_token, query.params[0], None)
+            backdoor.logger.info('Denied info for token %s to device %s' % (query.params[0], query.token))
+
+        backdoor.issue_query(query.token, response)
     else:
-        backdoor.logger.debug('Broken query. Expected exactly 2 parameters.')
-
-
-@helpers.handle_dbsession()
-def query_flashed(sqlsession, backdoor, query):
-    if len(query.params) == 1:
-        sqlsession.query(Token).filter_by(value=query.params[0]).first().flashed = True
-        backdoor.logger.debug('Token %s was flashed' % query.params[0])
-    backdoor.logger.debug('Broken query. Expected exactly 1 parameter.')
-
-
-@helpers.handle_dbsession()
-def query_open(sqlsession, backdoor, query):
-    response = Query(service=__service_name__)
-    if len(query.params) == 1:
-        if query.token in backdoor.connection_manager.webuis:
-            response.create_open(config.server_token)
-            backdoor.issue_query(query.params[0], response)
-            device_to_open = sqlsession.query(Device).filter_by(pubkey=query.params[0]).first()
-            backdoor.logger.debug('Sent OPEN to device %s.' % device_to_open.name)
-        else:
-            backdoor.logger.info('Requested flash came from a non webui or an unregistered one. It was discarded.')
-    backdoor.logger.debug('Broken query. Expected exactly 1 parameter.')
+        backdoor.logger.debug('Broken query. Expected exactly 1 parameter.')
 
 
 @helpers.handle_dbsession()

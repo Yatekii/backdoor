@@ -140,6 +140,26 @@ class Query:
         self.query['auth']['token'] = auth_token
         self.query['cmd']['method'] = 'PONG'
 
+    def create_sound_request(self, auth_token, token, sound_id):
+        self.query['auth']['token'] = auth_token
+        self.query['cmd']['method'] = 'FLASHED'
+        self.query['cmd']['token'] = token
+        if sound_id:
+            self.query['cmd']['permission'] = True
+            self.query['cmd']['sound_id'] = sound_id
+        else:
+            self.query['cmd']['permission'] = False
+
+    def create_info(self, auth_token, token, user):
+        self.query['auth']['token'] = auth_token
+        self.query['cmd']['method'] = 'FLASHED'
+        self.query['cmd']['token'] = token
+        if user:
+            self.query['cmd']['permission'] = True
+            self.query['cmd']['name'] = user.name
+        else:
+            self.query['cmd']['permission'] = False
+
     def create_valid_query_from_string(self, data):
         try:
             self.query = json.loads(data)
