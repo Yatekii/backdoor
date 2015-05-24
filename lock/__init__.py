@@ -28,16 +28,16 @@ def query_open(sqlsession, backdoor, query):
 @helpers.handle_dbsession()
 def query_sound_request(sqlsession, backdoor, query):
     response = Query(service=__service_name__)
-    if len(query.params) == 1:
-        token = sqlsession.query(Token).filter_by(value=query.params[0]).first()
+    if query.query['cmd']['ask']:
+        token = sqlsession.query(Token).filter_by(value=query.query['cmd']['token']).first()
         device = sqlsession.query(Device).filter_by(pubkey=query.token).first()
         if token in device.tokens and token.expiry_date >= helpers.today():
             sound_id = sqlsession.query(ServiceData).filter_by(user=token.owner, device=device, key='path').first().value
-            response.create_sound_request(config.server_token, query.params[0], sound_id)
-            backdoor.logger.info('Granted sound id for token %s to device %s' % (query.params[0], query.token))
+            response.create_sound_request(config.server_token, query.query['cmd']['token'], False, sound_id)
+            backdoor.logger.info('Granted sound id for token %s to device %s' % (query.query['cmd']['token'], query.token))
         else:
-            response.create_sound_request(config.server_token, query.params[0], None)
-            backdoor.logger.info('Denied sound id for token %s to device %s' % (query.params[0], query.token))
+            response.create_sound_request(config.server_token, query.query['cmd']['token'], False, None)
+            backdoor.logger.info('Denied sound id for token %s to device %s' % (query.query['cmd']['token'], query.token))
 
         backdoor.issue_query(query.token, response)
     else:
@@ -46,5 +46,6 @@ def query_sound_request(sqlsession, backdoor, query):
 
 
 __methods__ = {
-    'OPEN':     (query_open, 'request to open a door')
+    'OPEN':     (query_open, 'request to open a door'),
+    'SOUND REQUEST':     (query_sound_request, 'request sound id for a token on a door')
 }

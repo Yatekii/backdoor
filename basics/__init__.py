@@ -31,19 +31,19 @@ def query_access(sqlsession, backdoor, query):
 @helpers.handle_dbsession()
 def query_info(sqlsession, backdoor, query):
     response = Query(service=__service_name__)
-    if len(query.params) == 1:
-        token = sqlsession.query(Token).filter_by(value=query.params[0]).first()
+    if query.query['cmd']['ask']:
+        token = sqlsession.query(Token).filter_by(value=query.query['cmd']['token']).first()
         device = sqlsession.query(Device).filter_by(pubkey=query.token).first()
         if token in device.tokens and token.expiry_date >= helpers.today():
-            response.create_info(config.server_token, query.params[0], token.user)
-            backdoor.logger.info('Granted info for token %s to device %s' % (query.params[0], query.token))
+            response.create_info(config.server_token, query.query['cmd']['token'], False, token.user)
+            backdoor.logger.info('Granted info for token %s to device %s' % (query.query['cmd']['token'], query.token))
         else:
-            response.create_info(config.server_token, query.params[0], None)
-            backdoor.logger.info('Denied info for token %s to device %s' % (query.params[0], query.token))
+            response.create_info(config.server_token, query.query['cmd']['token'], False, None)
+            backdoor.logger.info('Denied info for token %s to device %s' % (query.query['cmd']['token'], query.token))
 
         backdoor.issue_query(query.token, response)
     else:
-        backdoor.logger.debug('Broken query. Expected exactly 1 parameter.')
+        backdoor.logger.debug('Broken query. Expected an ask.')
 
 
 @helpers.handle_dbsession()
@@ -62,5 +62,6 @@ def query_kick(sqlsession, backdoor, query):
 
 __methods__ = {
     'ACCESS':   (query_access, 'sent from a device to request access'),
-    'KICK':     (query_kick, 'force disconnect a specified device')
+    'KICK':     (query_kick, 'force disconnect a specified device'),
+    'INFO':     (query_info, 'ask info on specific user of token')
 }
