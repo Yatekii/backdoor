@@ -91,7 +91,7 @@ class Backdoor:
             self.logger.info(query.query)
 
     def add_method(self, service, name, fn):
-        self.methods['%s_%s' % (service, name)] = fn
+        self.methods['%s_%s' % (service, name)] = fn[0]
         self.logger.info('Loaded method %s: %s' % ('%s_%s' % (service, name), fn[1]))
 
     @helpers.handle_dbsession()
@@ -125,10 +125,8 @@ class Backdoor:
 
     def handle_query(self, query):
         self.logger.debug('Handle query:')
-        self.logger.debug(query.query)
-        print(self.methods)
-        if query.method in self.methods:
-            self.methods[query.method](self, query)
+        if ('%s_%s' % (query.query['cmd']['service'], query.method)) in self.methods:
+            self.methods['%s_%s' % (query.query['cmd']['service'], query.method)](self, query)
         else:
             self.logger.debug('Broken query. Unknown method: %s.' % query.method)
 

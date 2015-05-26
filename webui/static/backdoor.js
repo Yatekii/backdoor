@@ -20,7 +20,7 @@
 
 
 function findMatchesUsers(q, cb) {
-    $.ajax('https://backdoor.yatekii.ch/to_json/users', {q: q}).done(function (json) {
+    $.ajax('/to_json/users', {q: q}).done(function (json) {
         var substrRegex = new RegExp(q, 'i');
         var matches = [];
         $.each($.parseJSON(json).users, function (i, entry) {
@@ -33,7 +33,7 @@ function findMatchesUsers(q, cb) {
 }
 
 function findMatchesDevices(q, cb) {
-    $.ajax('https://backdoor.yatekii.ch/to_json/devices', {q: q}).done(function (json) {
+    $.ajax('/to_json/devices', {q: q}).done(function (json) {
         var substrRegex = new RegExp(q, 'i');
         var matches = [];
         $.each($.parseJSON(json).devices, function (i, entry) {
@@ -128,10 +128,10 @@ function search_typeahead() {
 
         input.bind('typeahead:selected', function (obj, datum, name) {
             if(name == 'users') {
-                window.location.href='https://backdoor.yatekii.ch/user/view/' + datum.id;
+                window.location.href='/user/view/' + datum.id;
             }
             else if(name == 'devices'){
-                window.location.href='https://backdoor.yatekii.ch/device/view/' + datum.id;
+                window.location.href='/device/view/' + datum.id;
             }
         });
 
@@ -168,7 +168,7 @@ function init_edit_field(name) {
 function check_flashed_status(entry, id) {
     $.ajax({
         type: 'POST',
-        url: 'https://backdoor.yatekii.ch/token_flashed',
+        url: '/token/flashed',
         data: {token_id: id}
     }).done(function (data) {
         if (data == 'True') {

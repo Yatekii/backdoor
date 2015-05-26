@@ -64,9 +64,11 @@ class Token(Base):
                 pass
 
         if not error:
+            t = helpers.generate_token()
+            print(t)
             token = models.Token(
                 name=name,
-                value=helpers.generate_token(),
+                value=t,
                 description=description,
                 owner=owner,
                 flashed=False,

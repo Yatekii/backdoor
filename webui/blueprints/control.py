@@ -48,7 +48,7 @@ def open(sqlsession, id):
         if user.default_device:
             device = user.default_device
         else:
-            id = int(config('default_door_device'))
+            id = int(config.read_config('default_door_device'))
     if id > 0 and not device:
         device = sqlsession.query(models.Device).filter_by(id=id).first()
 
@@ -68,7 +68,7 @@ def open(sqlsession, id):
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.connect((config.api_host, config.api_port))
                 temporary_token = helpers.generate_token()
-                q = Query()
+                q = Query(service='lock')
                 q.create_register_webui(config.webui_token, temporary_token)
                 s.send(q.to_command())
                 q.create_open(temporary_token, device.pubkey)

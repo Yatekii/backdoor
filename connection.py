@@ -48,9 +48,13 @@ class Connection(Thread):
         self.last_ping = time.time()
         self.pinged = False
 
-    def shutdown(self):
+    @helpers.handle_dbsession()
+    def shutdown(sqlsession, self):
         self.logger.info('Shutting down connection thread (%s, %d):' % (self.address[0], self.address[1]))
         self.running = False
+        device = sqlsession.query(Device).filter_by(pubkey=self.other).first()
+        if device:
+            device.is_online = False
 
         if self.other in self.parent.webuis:
             del self.parent.webuis[self.other]
@@ -84,7 +88,11 @@ class Connection(Thread):
             self.logger.info('Sent PING to %s.' % self.other)
 
     def work_data(self):
-        data = self.connection.recv(1024)
+        try:            
+            data = self.connection.recv(1024)
+        except ConnectionResetError:
+            self.logger.info('Connection reset by peer.')
+            self.shutdown();
         self.data += data
 
         if len(data) == 0:
