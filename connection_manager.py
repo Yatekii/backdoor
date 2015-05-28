@@ -23,6 +23,7 @@ import socket
 from threading import Thread
 from queue import Queue
 import logging
+import time
 
 from connection import Connection
 
@@ -38,7 +39,7 @@ class ConnectionManager(Thread):
         self.queries = Queue()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind((host, port))
-        self.socket.settimeout(2.0)
+        self.socket.settimeout(0.1)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.logger = logging.getLogger('backdoor')
         self.logger.info('Server started! Listening on port %d' % port)
@@ -53,6 +54,7 @@ class ConnectionManager(Thread):
                 self.connections[-1].start()
             except socket.timeout as e:
                 if e.args[0] == 'timed out':
+                    time.sleep(0.1)
                     continue
                 else:
                     self.logger.exception('Caught exception in connection manager run():')

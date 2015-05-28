@@ -39,7 +39,7 @@ class Connection(Thread):
         self.parent = parent
         self.data = b''
         self.connection, self.address = incomming_connection
-        self.connection.settimeout(2.0)
+        self.connection.settimeout(0.1)
         self.queries = Queue()
         self.other = None
         self.type = None
@@ -107,8 +107,9 @@ class Connection(Thread):
         try:
             query = self.queries.get(block=False)
             self.connection.sendall(query.to_command())
+            return True
         except queue.Empty:
-            pass
+            return False
         except Exception as e:
             self.logger.exception('Caught exception in connection thread (%s, %d) whilst trying to send query:'
                                   % (self.address[0], self.address[1]))
@@ -199,11 +200,13 @@ class Connection(Thread):
             self.manage_ping()
 
             try:
-                self.work_pending_queries()
+                query_done = self.work_pending_queries()
                 self.work_data()
 
             except socket.timeout as e:
                 if e.args[0] == 'timed out':
+                    if not query_done:
+                        time.sleep(0.1)
                     continue
                 else:
                     self.logger.exception('Caught exception in connection thread (%s, %d):'

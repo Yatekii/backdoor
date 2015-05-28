@@ -6,6 +6,7 @@ webui_host = '127.0.0.1'
 webui_port = 8001
 
 api_host = '129.132.17.47'
+# api_host = 'backdoor.yatekii.ch'
 api_port = 8003
 
 server_debug = True

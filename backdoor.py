@@ -23,6 +23,7 @@ import queue
 import signal
 import logging
 import importlib
+import time
 
 import models
 import services
@@ -75,6 +76,7 @@ class Backdoor:
                 self.logger.info('A request from anon registered device was discarded:')
                 self.logger.info(query.query)
         except queue.Empty:
+            time.sleep(0.1)
             pass
         except Exception as e:
             self.logger.exception('Caught exception during the update process:')
