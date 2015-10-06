@@ -47,7 +47,7 @@ def view(sqlsession, id):
     services = sqlsession.query(models.Service).filter_by(uses_blueprint=True).order_by(models.Service.name.asc()).all()
     service = sqlsession.query(models.Service).filter_by(id=id).first()
     return render_template(
-        'main.html',
+        'lock_main.html',
         active=active,
         id=id,
         service=service,

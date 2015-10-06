@@ -87,9 +87,3 @@ d.tokens.append(t)
 s.add(t)
 s.commit()
 s.close()
-
-# gpg = gnupg.GPG(gnupghome='keys')
-# gpg.encoding = 'utf-8'
-#
-# key_data = gpg.gen_key_input(key_type='RSA', key_length=4096, name_real='Backdoor Server', name_email='backdoor@bastli.ch')
-# key = gpg.gen_key(key_data)

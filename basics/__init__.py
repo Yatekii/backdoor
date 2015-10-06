@@ -6,9 +6,8 @@ from models import Token, Device, User
 
 __service_name__ = 'basics'
 __description__ = 'Provides basic commands to authenticate and establish/quit connections'
-__fields__ = ()
 __uses_blueprint__ = False
-
+__models__ = []
 
 @helpers.handle_dbsession()
 def query_access(sqlsession, backdoor, query):
@@ -18,6 +17,7 @@ def query_access(sqlsession, backdoor, query):
         device = sqlsession.query(Device).filter_by(pubkey=query.token).first()
         if token in device.tokens and token.expiry_date >= helpers.today():
             response.create_grant(config.server_token, query.params[0])
+            response.query['cmd']['name'] = token.owner.name;
             backdoor.logger.info('Granted access to token %s at device %s' % (query.params[0], query.token))
         else:
             response.create_deny(config.server_token, query.params[0])

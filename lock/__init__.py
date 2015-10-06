@@ -1,15 +1,38 @@
+from sqlalchemy import Column, Integer, String, Date, Boolean, ForeignKey
+from sqlalchemy.orm import relationship, backref
+
 import helpers
 from query import Query
 import config
-from models import Device, Token, ServiceData
-from models import Type
-
+from models import Device, Token, User
+from models import Base
 
 __service_name__ = 'lock'
 __description__ = 'A doormanager which can play a welcome sound.'
-__fields__ = (('path', 'path to a sound file', Type.text, '.', ()), )
 __uses_blueprint__ = True
 
+
+class Track(Base):
+    __tablename__ = __service_name__ + '_tracks'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    creation_date = Column(Date)
+    name = Column(String)
+    path = Column(String)
+
+
+class ActiveTrack(Base):
+    __tablename__ = __service_name__ + '_active_tracks'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    creation_date = Column(Date)
+    device_id = Column(Integer, ForeignKey(Device.__tablename__ + '.id'))
+    device = relationship('Device', lazy=False, backref='active_tracks')
+    track_id = Column(Integer, ForeignKey(Track.__tablename__ + '.id'))
+    track = relationship('Track', lazy=False, backref='active_tracks')
+    user_id = Column(Integer, ForeignKey(User.__tablename__ + '.id'))
+    user = relationship('User', lazy=False, backref='aktive_tracks')
+
+
+__models__ = [Track, ActiveTrack]
 
 @helpers.handle_dbsession()
 def query_open(sqlsession, backdoor, query):
@@ -33,8 +56,8 @@ def query_sound_request(sqlsession, backdoor, query):
         token = sqlsession.query(Token).filter_by(value=query.query['cmd']['token']).first()
         device = sqlsession.query(Device).filter_by(pubkey=query.token).first()
         if token in device.tokens and token.expiry_date >= helpers.today():
-            sound_id = sqlsession.query(ServiceData).filter_by(user=token.owner, device=device, key='path').first().value
-            response.create_sound_request(config.server_token, query.query['cmd']['token'], False, sound_id)
+            path = sqlsession.query(User).filter_by(user=token.owner, device=device).first().path
+            response.create_sound_request(config.server_token, query.query['cmd']['token'], False, path)
             backdoor.logger.info('Granted sound id for token %s to device %s' % (query.query['cmd']['token'], query.token))
         else:
             response.create_sound_request(config.server_token, query.query['cmd']['token'], False, None)

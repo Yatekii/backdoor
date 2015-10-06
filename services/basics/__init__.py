@@ -6,9 +6,8 @@ from models import Token, Device, User
 
 __service_name__ = 'basics'
 __description__ = 'Provides basic commands to authenticate and establish/quit connections'
-__fields__ = ()
 __uses_blueprint__ = False
-
+__models__ = []
 
 @helpers.handle_dbsession()
 def query_access(sqlsession, backdoor, query):

@@ -32,7 +32,6 @@ class Device(Base):
     used_by_default_by = relationship('User', backref='default_device')
     is_online = Column(Boolean)
     is_enabled = Column(Boolean)
-    data = relationship('ServiceData', lazy='dynamic', backref='device')
 
     @helpers.handle_dbsession()
     def revoke(sqlsession, device):
