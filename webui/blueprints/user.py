@@ -43,13 +43,14 @@ blueprint = Blueprint('user', __name__, template_folder='templates')
 def view(sqlsession, id):
     id = int(id)
     active = 'users'
-
     user = None
     if id > 0:
         user = sqlsession.query(models.User).filter_by(id=int(id)).first()
 
     permissions = None
     if user:
+        print('actual', user.level)
+        print('needed', OVER_NINETHOUSAND)
         permissions = [
             user.level & CAN_LOGIN,
             user.level & MANIPULATE_USERS,
@@ -79,8 +80,10 @@ def add():
     permissions = {}
     for checkbox in request.form:
         if 'permission' in checkbox:
+            print('split', checkbox.split('permission')[1])
             level |= 1 << int(checkbox.split('permission')[1])
             permissions[checkbox] = 1
+    print('level', level)
     id, errors = models.User.add(
         username=request.form['add_user_username'].lower(),
         password=request.form['add_user_password'],
@@ -132,8 +135,9 @@ def change(id):
             level = 0
             for checkbox in request.form:
                 if 'permission' in checkbox:
+                    print('split', checkbox.split('permission')[1])
                     level |= 1 << int(checkbox.split('permission')[1])
-            print(level)
+            print('level', level)
             id, errors = models.User.change(
                 id,
                 level=level,

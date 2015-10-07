@@ -67,7 +67,7 @@ app.register_blueprint(profile.blueprint, url_prefix='/profile')
 
 @helpers.handle_dbsession()
 def load_blueprints(sqlsession, app):
-    s = sqlsession.query(models.Service).filter_by().all()
+    s = sqlsession.query(models.Service).filter_by(uses_blueprint=True).all()
     i = 0
     for service in s:
         print('Loading blueprint for service %s' % service.name)
@@ -79,7 +79,6 @@ def load_blueprints(sqlsession, app):
     print('Loaded %d blueprints' % i if i != 1 else 'Loaded 1 blueprint.')
 
 def load_blueprint(service, app):
-    print(blueprints)
     if service not in blueprints:
         try:
             p = importlib.import_module('.%s' % service, 'services')
