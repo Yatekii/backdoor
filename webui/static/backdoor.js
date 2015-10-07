@@ -24,7 +24,8 @@ function findMatchesUsers(q, cb) {
         var substrRegex = new RegExp(q, 'i');
         var matches = [];
         $.each($.parseJSON(json).users, function (i, entry) {
-            if (substrRegex.test(entry.name)) {
+
+            if (substrRegex.test(entry.name) || substrRegex.test(entry.username)) {
                 matches.push(entry);
             }
         });
@@ -113,7 +114,10 @@ function search_typeahead() {
                 source: findMatchesUsers,
                 displayKey: 'name',
                 templates: {
-                    header: '<h3 class="search_name_title">Users</h3>'
+                    header: '<h3 class="search_name_title">Users</h3>',
+                    suggestion: function(data){
+                        return '<p><strong>' + data.name + '</strong> (' + data.username + ')</p>';
+                    }
                 }
             },
             {

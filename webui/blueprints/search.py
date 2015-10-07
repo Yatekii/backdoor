@@ -29,6 +29,7 @@ import models
 
 
 from webui.wrappers import check_session
+from sqlalchemy import or_
 
 
 blueprint = Blueprint('search', __name__, template_folder='templates')
@@ -50,8 +51,14 @@ def search(sqlsession, type, id):
     if id > 0:
         device = sqlsession.query(models.Device).filter_by(id=id).first()
 
-    users = sqlsession.query(models.User).filter(models.User.name.like('%' + request.args.get('q') + '%')).all()
-    devices = sqlsession.query(models.Device).filter(models.Device.name.like('%' + request.args.get('q') + '%')).all()
+    users = sqlsession.query(models.User).filter(
+        or_(
+            models.User.name.like('%' + request.args.get('q') + '%'),
+            models.User.username.like('%' + request.args.get('q') + '%'))
+        ).all()
+    devices = sqlsession.query(models.Device).filter(
+            models.Device.name.like('%' + request.args.get('q') + '%')
+        ).all()
     return render_template(
         'search.html',
         active=active,

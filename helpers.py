@@ -26,6 +26,7 @@ import string
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import or_
 
 
 import config
@@ -73,10 +74,9 @@ def generate_token():
 @handle_dbsession()
 def users_to_json_by_filter(session, **kwargs):
     users = session.query(models.User).filter_by(**kwargs).all()
-    session.add_all(users)
     json_string = '{"users": ['
     for user in users:
-        json_string += '{\n"name": "%s",\n "id": "%s"\n}, ' % (user.name, user.id)
+        json_string += '{\n"name": "%s",\n"username": "%s",\n "id": "%s"\n}, ' % (user.name, user.username, user.id)
     return json_string[:-2] + ']}'
 
 
